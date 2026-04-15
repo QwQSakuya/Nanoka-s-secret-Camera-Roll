@@ -1,0 +1,85 @@
+Anan's Sketchbook Chat Box (Flet 重写版) - 项目规划
+
+1. 技术栈选型
+
+GUI 框架: flet (用于构建现代、美观的主界面和设置界面)
+
+全局按键监听与模拟: keyboard 或 pynput (推荐 keyboard，对于按键阻断和快捷键注册更方便)
+
+剪贴板操作: pyperclip (处理文本) + Pillow (处理剪贴板中的图片读取和写入) / Windows 系统可能需要配合 win32clipboard
+
+图片生成与处理: Pillow (PIL) (用于将底图、表情、文本框合成一张图片)
+
+配置文件管理: json (简单易读，适合热切换)
+
+系统托盘与悬浮窗: pystray (系统托盘) + flet (无边框透明窗口实现悬浮窗) / 或者如果 Flet 悬浮穿透不好做，可考虑 PyQt5/PySide6 专门做悬浮窗，但为了保持技术栈统一，先尝试 Flet 的无边框透明特性。
+
+2. 推荐目录结构
+
+Anans_Sketchbook_Flet/
+│
+├── main.py                 # 程序主入口，初始化 GUI 和后台监听
+├── core/                   # 核心逻辑模块
+│   ├── key_listener.py     # 全局按键监听、阻断、模拟输入模块
+│   ├── clipboard_mgr.py    # 剪贴板读写模块
+│   └── image_generator.py  # 基于 Pillow 的图片合成模块
+│
+├── ui/                     # Flet UI 组件目录
+│   ├── main_window.py      # 主界面布局
+│   ├── views/              # 各个子页面
+│   │   ├── view_home.py    # 主要介绍页面
+│   │   ├── view_emotes.py  # 表情列表与卡片页面
+│   │   ├── view_logs.py    # 日志页面
+│   │   └── view_settings.py# 设置页面
+│   ├── floating_widget.py  # 悬浮窗 UI
+│   └── editor_window.py    # 独立的表情可视化编辑界面
+│
+├── EmoteConfigs/           # 表情配置文件存放目录 (JSON + 底图)
+│   ├── default/
+│   │   ├── config.json
+│   │   └── base.png
+│   └── ...
+│
+├── Configs/                # 全局配置文件存放目录
+│   └── global_settings.json
+│
+├── Fonts/                  # 字体文件目录
+│   └── MiHeavy.ttf         # 默认字体
+│
+├── Logs/                   # 日志存储目录
+│   └── app.log
+│
+└── assets/                 # UI 静态资源 (图标等)
+
+
+3. 开发阶段划分
+
+第一阶段：底层核心逻辑 (Core)
+
+按键监听与宏：编写 key_listener.py，实现按下特定组合键后，自动触发 Ctrl+A -> Ctrl+X，并拦截原生按键（如阻断回车键原本的发送行为）。
+
+剪贴板接管：编写 clipboard_mgr.py，能够读取刚刚剪切的文本，并能判断当前剪贴板内是否有图片。
+
+图片引擎：编写 image_generator.py，使用 Pillow 读取 EmoteConfigs，将文本渲染到指定位置（处理字体、颜色、描边、自动换行），合成最终图片。
+
+第二阶段：基础 GUI (UI - 主界面)
+
+搭建 Flet 导航框架（导航栏 + 页面路由）。
+
+设置页面：读取和保存 global_settings.json，并热更新到核心逻辑。
+
+表情列表页面：读取 EmoteConfigs，用 Flet 的 GridView 渲染表情卡片。实现打开文件夹、搜索功能。
+
+第三阶段：可视化编辑器与悬浮窗 (UI - 进阶)
+
+悬浮窗：实现一个透明、无边框、置顶的 Flet 窗口，展示当前状态。
+
+可视化编辑器：最复杂的部分。需要实现参数调整（滑块、颜色选择器、文本框）并调用 image_generator.py 实时更新预览图。
+
+第四阶段：整合与优化
+
+托盘图标（最小化到托盘）。
+
+日志系统接入 UI。
+
+容错处理与打包 (PyInstaller)。
