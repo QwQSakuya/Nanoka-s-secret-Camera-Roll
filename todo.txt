@@ -1,8 +1,8 @@
-Anan's Sketchbook Chat Box (Flet 重写版) - 项目规划
+Anan's Sketchbook Chat Box PySide6 - 项目规划
 
 1. 技术栈选型
 
-GUI 框架: flet (用于构建现代、美观的主界面和设置界面)
+GUI 框架: PySide6 (用于构建现代、美观的主界面和设置界面)
 
 全局按键监听与模拟: keyboard 或 pynput (推荐 keyboard，对于按键阻断和快捷键注册更方便)
 
