@@ -1,0 +1,71 @@
+{
+    "name": "安安#无语#",
+    "hotkey": "alt+5",
+    "is_enabled": true,
+    "text_color": [
+        0,
+        0,
+        0
+    ],
+    "stroke_color": [
+        0,
+        0,
+        0
+    ],
+    "underline_color": [
+        255,
+        255,
+        255
+    ],
+    "stroke_width": 0,
+    "font_size": 70,
+    "font_name": "MiHeavy.ttf",
+    "is_italic": false,
+    "is_underline": false,
+    "text_align": "center",
+    "valign": "middle",
+    "offset_x": 0,
+    "offset_y": 0,
+    "text_rotation": 0,
+    "letter_spacing": -1,
+    "line_spacing": -3,
+    "show_box": false,
+    "box_x": 98,
+    "box_y": 435,
+    "box_w": 322,
+    "box_h": 196,
+    "box_color": [
+        0,
+        0,
+        0,
+        128
+    ],
+    "box_border_color": [
+        139,
+        255,
+        143,
+        0
+    ],
+    "box_border_width": 0,
+    "auto_shrink": false,
+    "canvas_w": 0,
+    "canvas_h": 0,
+    "base_x": 0,
+    "base_y": 0,
+    "base_w": 0,
+    "base_h": 0,
+    "base_rotation": 0,
+    "overlays": [
+        {
+            "image": "base_overlay.png",
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "z": 2,
+            "rotation": 0
+        }
+    ],
+    "max_chars": 0,
+    "base_image": "base.png"
+}

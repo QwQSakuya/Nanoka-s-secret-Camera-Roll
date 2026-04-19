@@ -1,0 +1,43 @@
+{
+    "global_trigger_key": "ctrl+enter",
+    "block_keys": true,
+    "delay_ms": 149,
+    "auto_start": false,
+    "show_hud": true,
+    "show_tray_msg": true,
+    "opacity": 0.9,
+    "syntax_rules": [
+        {
+            "type": "enclose",
+            "start": "【",
+            "end": "】",
+            "color": "#cba6f7"
+        },
+        {
+            "type": "enclose",
+            "start": "[",
+            "end": "]",
+            "color": "#cba6f7"
+        },
+        {
+            "type": "prefix",
+            "start": "【伪证】",
+            "end": "",
+            "color": "#ff5f56"
+        },
+        {
+            "type": "prefix",
+            "start": "[伪证]",
+            "end": "",
+            "color": "#ff5f56"
+        }
+    ],
+    "hud_mode": "always",
+    "hud_opacity": 100,
+    "hud_click_through": false,
+    "target_processes": [
+        "discord.exe",
+        "wechat.exe",
+        "qq.exe"
+    ]
+}

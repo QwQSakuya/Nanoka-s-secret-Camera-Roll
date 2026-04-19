@@ -3,193 +3,289 @@ import time
 import sys
 import os
 import signal
+import ctypes
+import psutil
 from PySide6.QtCore import QObject, Signal, Slot, Qt
 from PySide6.QtWidgets import QApplication
+from PIL import Image
 
-# 获取当前文件所在目录和父目录
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-
-# 确保父目录在 sys.path 中，以便可以基于根目录进行导入
-if parent_dir not in sys.path:
-    sys.path.append(parent_dir)
-
-# 直接明确使用大写的 Core 进行导入
-try:
-    from Core.clipboard_mgr import ClipboardManager
-    from Core.image_generator import ImageGenerator
-except ModuleNotFoundError:
-    if current_dir not in sys.path:
-        sys.path.append(current_dir)
-    from clipboard_mgr import ClipboardManager
-    from image_generator import ImageGenerator
+# 统一路径规范，确保直接运行或被 main.py 调用时都能正确导入 Core 模块
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from Core.clipboard_mgr import ClipboardManager
+from Core.image_generator import ImageGenerator
 
 class ChatBoxController(QObject):
     """
-    核心工作流控制器 (防弹重构版)
-    负责桥接: 键盘监听 <-> 剪贴板管理 <-> 图像引擎
+    核心工作流控制器 (两步走：装填 -> 发射)
+    负责桥接: 键盘监听 <-> HUD悬浮窗 <-> 剪贴板管理 <-> 图像引擎
     """
-    trigger_workflow = Signal(str)
-    quit_app = Signal()
+    arm_signal = Signal(dict)
+    execute_signal = Signal()
+    quit_signal = Signal()
 
-    def __init__(self, clipboard_mgr: ClipboardManager, image_generator: ImageGenerator):
+    def __init__(self, clipboard_mgr: ClipboardManager, image_gen: ImageGenerator):
         super().__init__()
-        self.clipboard = clipboard_mgr
-        self.image_generator = image_generator
+        self.clipboard_mgr = clipboard_mgr
+        self.image_gen = image_gen
+        
         self.is_running = False
-        self.registered_hotkeys = []
+        self.active_hotkeys = []  
+        self.emotes_configs = []  
+        self.global_settings = {}
         
-        self.trigger_workflow.connect(self._process_workflow, Qt.QueuedConnection)
-        self.quit_app.connect(QApplication.instance().quit, Qt.QueuedConnection)
-
-    def on_trigger(self, emote_name: str):
-        self.trigger_workflow.emit(emote_name)
+        # 核心状态：当前已经装填完毕待发射的表情
+        self.armed_emote_cfg = None 
+        # UI 传进来的悬浮窗回调函数
+        self.hud_callback = None    
         
-    def safe_quit(self):
-        print("\n[系统] 收到退出指令，正在安全关闭...")
-        self.quit_app.emit()
+        # 绑定信号槽，确保多线程跨越时在主 GUI 线程执行
+        self.arm_signal.connect(self._arm_emote, Qt.QueuedConnection)
+        self.execute_signal.connect(self._execute_workflow, Qt.QueuedConnection)
+        self.quit_signal.connect(QApplication.instance().quit, Qt.QueuedConnection)
 
-    def _safe_clear_clipboard(self):
-        """带有重试机制的剪贴板清空 (状态隔离)"""
+    # =============== 键盘 Hook 触发点 ===============
+    def trigger_arm(self, emote_cfg):
+        """按下具体表情的快捷键 -> 触发装填信号 (不受进程限制)"""
+        self.arm_signal.emit(emote_cfg)
+        
+    def trigger_execute(self):
+        """按下全局发送的快捷键 -> 触发执行合成信号"""
+        # --- 进程焦点检测限制 ---
+        if not self.is_target_app_active():
+            print(f"[{time.strftime('%H:%M:%S')}] [DEBUG] 当前焦点不在白名单软件中，发射指令被忽略。")
+            return
+        # ------------------------
+        self.execute_signal.emit()
+        
+    def quit(self):
+        self.quit_signal.emit()
+
+    # =============== 进程焦点辅助函数 ===============
+    def is_target_app_active(self):
+        """
+        检查当前处于焦点的系统窗口是否属于指定的应用程序白名单
+        """
+        # 从全局设置中获取白名单
+        raw_procs = self.global_settings.get("target_processes", [])
+        
+        # 处理可能的数据格式 (字符串或列表)
+        if isinstance(raw_procs, str):
+            target_list = [p.strip().lower() for p in raw_procs.split(",") if p.strip()]
+        else:
+            target_list = [str(p).strip().lower() for p in raw_procs if str(p).strip()]
+            
+        # 如果白名单为空，代表允许所有软件触发（对应主界面留空的逻辑）
+        if not target_list:
+            return True
+            
+        try:
+            # 获取当前处于前台的活动窗口句柄
+            hwnd = ctypes.windll.user32.GetForegroundWindow()
+            if not hwnd:
+                return False
+            
+            # 获取该窗口对应的进程 PID
+            pid = ctypes.c_ulong(0)
+            ctypes.windll.user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+            
+            # 使用 psutil 获取进程名称并进行忽略大小写的比对
+            process = psutil.Process(pid.value)
+            active_process_name = process.name().lower()
+            
+            return active_process_name in target_list
+        except Exception as e:
+            # 捕获可能的进程访问权限不足或进程瞬时退出的情况
+            return False
+
+    # =============== 剪贴板辅助函数 ===============
+    def _clear_clipboard(self):
         cb = QApplication.clipboard()
         for _ in range(3):
             cb.clear()
-            cb.setText("")  # 覆盖可能存在的格式化数据
+            cb.setText("") 
             QApplication.processEvents()
-            time.sleep(0.05)
-            if not cb.mimeData().hasImage() and not cb.mimeData().hasText():
-                return
+            if not cb.mimeData().hasImage() and not cb.mimeData().hasText(): return
+            time.sleep(0.01)
 
-    def _safe_set_image(self, img) -> bool:
-        """带有防死锁重试机制的图片写入 (终结 COM Error 0x800401d0)"""
+    def _write_image_to_clipboard(self, img) -> bool:
         cb = QApplication.clipboard()
-        for attempt in range(5): # 最多重试 5 次
-            self.clipboard.set_image(img)
-            QApplication.processEvents()
-            time.sleep(0.1)
-            
-            # 验证写入是否成功
-            if cb.mimeData().hasImage():
-                return True
-                
-            # 虽然 Qt 底层可能已经在终端打印了 C++ 级别的 COM 警告，但我们在这里成功拦截并重试
-            print(f" -> [系统警告] 剪贴板正被其他程序锁定，正在重试写入 ({attempt + 1}/5)...")
-            time.sleep(0.2) # 避让系统锁
+        for attempt in range(5):
+            self.clipboard_mgr.set_image(img)
+            for _ in range(5):
+                QApplication.processEvents()
+                if cb.mimeData().hasImage(): return True
+                time.sleep(0.01)
+            time.sleep(0.05)
         return False
 
-    @Slot(str)
-    def _process_workflow(self, emote_name: str):
+    # =============== 核心逻辑执行 ===============
+    @Slot(dict)
+    def _arm_emote(self, emote_cfg: dict):
+        """阶段 1：将表情配置装入内存，并呼出桌面悬浮窗提示"""
+        self.armed_emote_cfg = emote_cfg
+        emote_name = emote_cfg.get("name", "未知表情")
+        
+        print(f"[{time.strftime('%H:%M:%S')}] [INFO] 已装填表情 -> {emote_name}")
+        
+        if not self.hud_callback:
+            print(f"[{time.strftime('%H:%M:%S')}] [WARN] 无法弹出悬浮窗: HUD 回调未绑定 (请检查主界面 start_listening 传参)")
+            return
+
+        if not self.global_settings.get("show_hud", True):
+            print(f"[{time.strftime('%H:%M:%S')}] [DEBUG] 全局设置中关闭了悬浮窗显示，已跳过弹出。")
+            return
+
         try:
-            print(f"\n[{time.strftime('%H:%M:%S')}] 🚀 [开始] 触发表情: {emote_name}")
+            img_path = os.path.join(emote_cfg.get("_folder_path", ""), emote_cfg.get("base_image", "base.png"))
+            self.hud_callback(emote_name, img_path)
+            print(f"[{time.strftime('%H:%M:%S')}] [DEBUG] 悬浮窗弹窗指令已成功下发至 UI 层。")
+        except Exception as e:
+            print(f"[{time.strftime('%H:%M:%S')}] [ERROR] 悬浮窗唤起时发生意外异常: {e}")
+
+    @Slot()
+    def _execute_workflow(self):
+        """阶段 2：执行提取文字、生成图片并发送"""
+        if not self.armed_emote_cfg:
+            print(f"[{time.strftime('%H:%M:%S')}] [WARN] 尚未装填任何表情，请先按下表情对应的快捷键！")
+            return
             
-            # --- 阶段 1: 环境清理与状态备份 ---
-            # 释放物理按键，防止与自动按键粘连引发错误 (如 Alt+Enter 变成换行)
-            for key in ['alt', 'ctrl', 'shift', 'win']:
+        workflow_start_time = time.perf_counter()
+        emote_name = self.armed_emote_cfg.get("name")
+        
+        try:
+            print(f"\n[{time.strftime('%H:%M:%S')}] [INFO] 当前表情: {emote_name} ")
+            
+            for key in ['alt', 'ctrl', 'shift', 'win', 'enter']:
                 keyboard.release(key)
-            time.sleep(0.05)
+            time.sleep(0.01)
 
-            # 备份底层图片 (必须在任何剪贴板操作前进行)
-            has_img = self.clipboard.check_and_backup_image()
-            if has_img:
-                print(f" -> [1/5] 📦 已备份底图，尺寸: {self.clipboard.get_cached_image().size}")
-            else:
-                print(" -> [1/5] 📦 剪贴板无底图，准备生成纯文本气泡。")
+            has_base_img = self.clipboard_mgr.check_and_backup_image()
 
-            # --- 阶段 2: 提取文本 ---
-            # 清理系统剪贴板，防止上一轮的残留干扰
-            self._safe_clear_clipboard()
+            self._clear_clipboard()
             
-            print(" -> [2/5] ✂️ 模拟全选与剪切 (Ctrl+A -> Ctrl+X)...")
             keyboard.send('ctrl+a')
-            time.sleep(0.1) # 增加微小停顿，确保目标软件已全选
+            time.sleep(0.04) 
             keyboard.send('ctrl+x')
             
-            # 【核心修复：主动轮询抓取文本】
-            # 抛弃纯 sleep，引入 processEvents 强刷系统剪贴板状态，完美解决抓不到字的 Bug
-            text = ""
-            for _ in range(10): # 最多轮询等待 1 秒钟
-                time.sleep(0.1)
-                QApplication.processEvents() # 强制 Qt 更新底层系统事件！
-                text = QApplication.clipboard().text().strip()
-                if text:
+            extracted_text = ""
+            for i in range(50):
+                QApplication.processEvents()
+                extracted_text = QApplication.clipboard().text().strip()
+                
+                if extracted_text: 
                     break
-            
-            print(f" -> [3/5] 📝 提取到文字: '{text}'")
+                    
+                if i == 25:
+                    print(f"[{time.strftime('%H:%M:%S')}] [DEBUG] 尝试补发 Ctrl+X...")
+                    keyboard.send('ctrl+x')
+                    
+                time.sleep(0.01)
 
-            # --- 阶段 3: 图像生成与写入 ---
-            print(" -> [4/5] 🎨 图像引擎渲染中...")
-            base_image = self.clipboard.get_cached_image()
-            generated_image = self.image_generator.generate(base_image, text)
-            
-            # 安全写入剪贴板 (核心防弹区域)
-            if self._safe_set_image(generated_image):
-                print(" -> [4/5] ✅ 图片已稳妥写入剪贴板！")
+            if not extracted_text and not has_base_img:
+                print(f"[{time.strftime('%H:%M:%S')}] [INFO] 工作流中断 | 没有选中任何文本或底图")
+                return
+
+            # 5. 图像生成核心
+            img_path = os.path.join(self.armed_emote_cfg.get("_folder_path", ""), self.armed_emote_cfg.get("base_image", "base.png"))
+            if os.path.exists(img_path):
+                base_image = Image.open(img_path).convert("RGB")
             else:
-                print(" -> [4/5] ❌ 写入剪贴板彻底失败，终止本次发送保护现场。")
-                return # 放弃粘贴，避免把剪切的文字直接发出去
+                base_image = Image.new('RGB', (400, 300), color=(40, 42, 54))
+            
+            # 【核心修改】：将事先复制的图片作为一个内联元素(类似超级Emoji)，丢给渲染引擎进行框内排版缩放
+            copied_image = self.clipboard_mgr.get_cached_image()
+            if copied_image:
+                print(f"[{time.strftime('%H:%M:%S')}] [INFO] 检测到图片...")
+                self.armed_emote_cfg["inline_image"] = copied_image
+            else:
+                self.armed_emote_cfg.pop("inline_image", None)
+            
+            # 统一生成：带有内联图片和文字的最终合成图
+            final_image = self.image_gen.generate(base_image, extracted_text, config=self.armed_emote_cfg)
 
-            # --- 阶段 4: 粘贴与发送 ---
-            print(" -> [5/5] 🚀 正在粘贴与发送...")
+            # 转换成安全的 RGB 格式（如果是透明图层会填上白底，防止在微信复制变黑块）
+            if final_image.mode == 'RGBA':
+                bg = Image.new('RGB', final_image.size, (255, 255, 255))
+                mask = final_image.split()[3] if len(final_image.split()) == 4 else None
+                bg.paste(final_image, mask=mask)
+                final_image = bg
+
+            # 6. 一次性将完美的终极图片写入剪贴板并粘贴！
+            if not self._write_image_to_clipboard(final_image):
+                print(f"[{time.strftime('%H:%M:%S')}] [ERROR] 剪贴板重写失败")
+                return 
+
             keyboard.send('ctrl+v')
             
-            # 【动态等待策略】
-            # 图片粘贴到聊天框需要被解码和渲染。底图越大，耗时越长。
-            render_wait_time = 1.0 if has_img else 0.5
-            time.sleep(render_wait_time)
+            delay_ms = self.global_settings.get("delay_ms", 150)
+            time.sleep(delay_ms / 1000.0)
             
-            # 独立敲击回车，确保发送成功
-            keyboard.press('enter')
-            time.sleep(0.05)
-            keyboard.release('enter')
-
-            # --- 阶段 5: 现场清理 ---
-            # 【修复点】发送完成后，立刻强制清空剪贴板的图片，防止污染下一次触发
-            time.sleep(0.15) 
-            self._safe_clear_clipboard()
+            keyboard.send('enter')
+            self._clear_clipboard()
             
-            print(f"[{time.strftime('%H:%M:%S')}] ✨ [完成] 完美结束单次工作流！已打扫剪贴板现场。")
+            print(f"[{time.strftime('%H:%M:%S')}] [INFO] 成功发射 {emote_name}")
+            
         except Exception as e:
-            print(f"\n❌ [严重崩溃] 工作流遇到未捕获异常: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"\n[{time.strftime('%H:%M:%S')}] [ERROR] 致命异常: {e}")
 
-    def start_listening(self):
+    # =============== 生命周期管理 ===============
+    def start_listening(self, emotes_configs=None, global_settings=None, hud_callback=None):
         if self.is_running:
-            return
-        keyboard.add_hotkey('alt+1', self.on_trigger, args=('默认猫猫表情',), suppress=True)
-        self.registered_hotkeys.append('alt+1')
+            self.stop_listening()
+            
+        if emotes_configs is not None:
+            self.emotes_configs = emotes_configs
+        if global_settings is not None:
+            self.global_settings = global_settings
+        if hud_callback is not None:
+            self.hud_callback = hud_callback
+        
+        is_block = self.global_settings.get("block_keys", True)
+        
+        for cfg in self.emotes_configs:
+            hotkey = cfg.get("hotkey")
+            if hotkey and cfg.get("is_enabled", True):
+                try:
+                    keyboard.add_hotkey(hotkey, self.trigger_arm, args=(cfg,), suppress=is_block)
+                    self.active_hotkeys.append(hotkey)
+                except Exception as e:
+                    print(f"[{time.strftime('%H:%M:%S')}] [WARN] 快捷键 {hotkey} 使用失败: {e}")
+
+        global_hk = self.global_settings.get("global_trigger_key", "alt+enter").lower()
+        if global_hk:
+            try:
+                keyboard.add_hotkey(global_hk, self.trigger_execute, suppress=is_block)
+                self.active_hotkeys.append(f"全局输出:{global_hk}")
+            except Exception as e:
+                print(f"[{time.strftime('%H:%M:%S')}] [WARN]  {global_hk} 注册失败: {e}")
+
         self.is_running = True
-        print("✅ 监听服务已激活！请尝试在聊天框按下 [Alt + 1]。")
+        print(f"[{time.strftime('%H:%M:%S')}] [INFO] 当前监控键位: {self.active_hotkeys}")
 
     def stop_listening(self):
         keyboard.unhook_all()
-        self.registered_hotkeys.clear()
+        self.active_hotkeys.clear()
         self.is_running = False
-        print("❌ 监听服务已关闭。")
+        print(f"[{time.strftime('%H:%M:%S')}] [INFO] exit")
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     app = QApplication(sys.argv)
-    app.setQuitOnLastWindowClosed(False) 
+    app.setQuitOnLastWindowClosed(False)
+
+    print("--- 两步走监听器独立测试 ---")
+    cb_mgr = ClipboardManager()
+    img_gen = ImageGenerator()
+    controller = ChatBoxController(cb_mgr, img_gen)
     
-    mgr = ClipboardManager()
-    generator = ImageGenerator()
-    controller = ChatBoxController(mgr, generator)
+    test_emotes = [
+        {"name": "测试表情", "hotkey": "alt+1", "_folder_path": "", "is_enabled": True}
+    ]
+    test_globals = {"global_trigger_key": "alt+s", "block_keys": True, "show_hud": True}
     
-    print("========================================")
-    print("      🌟 全流程终极联合测试 🌟         ")
-    print("========================================")
-    print("请按以下步骤操作：")
-    print("1. 随便复制一张图片 (当作表情底图)。")
-    print("2. 打开微信/QQ聊天框，打一句骚话。")
-    print("3. 按下快捷键 [Alt + 1] 见证奇迹！")
-    print("----------------------------------------\n")
-    
-    try:
-        controller.start_listening()
-        keyboard.add_hotkey('esc', controller.safe_quit)
-        sys.exit(app.exec())
-    except KeyboardInterrupt:
-        pass
-    finally:
-        controller.stop_listening()
+    def mock_hud(name, path):
+        print(f">>> [HUD 悬浮窗真实验证] 成功收到弹窗指令！当前已装备: {name}")
+
+    controller.start_listening(test_emotes, test_globals, mock_hud)
+    print("请按 Alt+1 装填，再按 Alt+S 执行发射测试。按 Ctrl+C 退出...")
+    sys.exit(app.exec())

@@ -1,0 +1,1007 @@
+[2026-04-19 17:06:42] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 17:06:42] [INFO] 正在加载配置管理器...
+[2026-04-19 17:06:42] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 17:06:44] [INFO] 数据中枢和前端 UI 日志模块已成功绑定。
+[2026-04-19 17:06:45] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 17:07:45] [DEBUG] [UI] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 17:12:24] [INFO] 高亮规则已保存并即时生效！
+[2026-04-19 17:12:28] [INFO] 偏好设置已自动热更新！
+[2026-04-19 17:12:31] [INFO] 偏好设置已自动热更新！
+[2026-04-19 17:17:31] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 17:17:31] [INFO] 正在加载配置管理器...
+[2026-04-19 17:17:31] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 17:17:35] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 17:21:06] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 17:21:06] [INFO] 正在加载配置管理器...
+[2026-04-19 17:21:06] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 17:21:08] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 17:23:38] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 17:23:38] [INFO] 正在加载配置管理器...
+[2026-04-19 17:23:38] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 17:23:41] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 17:24:14] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 17:24:14] [INFO] 正在加载配置管理器...
+[2026-04-19 17:24:14] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 17:24:16] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 17:24:28] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 17:24:28] [INFO] 正在加载配置管理器...
+[2026-04-19 17:24:28] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 17:24:33] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 17:25:58] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 17:25:58] [INFO] 正在加载配置管理器...
+[2026-04-19 17:25:58] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 17:26:00] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 17:27:32] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 17:27:32] [INFO] 正在加载配置管理器...
+[2026-04-19 17:27:32] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 17:27:34] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 17:48:43] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 17:48:43] [INFO] 正在加载配置管理器...
+[2026-04-19 17:48:43] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 17:48:44] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 17:58:22] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 17:58:22] [INFO] 正在加载配置管理器...
+[2026-04-19 17:58:22] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 17:58:25] [INFO] 数据中枢和前端 UI 日志模块已成功绑定。
+[2026-04-19 17:58:25] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 18:02:52] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 18:02:52] [INFO] 正在加载配置管理器...
+[2026-04-19 18:02:52] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 18:02:54] [INFO] 数据中枢和前端 UI 日志模块已成功绑定。
+[2026-04-19 18:02:54] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 18:09:25] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 18:09:25] [INFO] 正在加载配置管理器...
+[2026-04-19 18:09:25] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 18:09:27] [INFO] 前端日志面板已安全就绪，开始拦截底层输出...
+[2026-04-19 18:09:27] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 18:10:35] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 18:10:36] [INFO] 正在加载配置管理器...
+[2026-04-19 18:10:36] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 18:10:39] [INFO] 前端日志面板已安全就绪，开始拦截底层输出...
+[2026-04-19 18:10:39] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 18:18:21] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 18:18:21] [INFO] 正在加载配置管理器...
+[2026-04-19 18:18:21] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 18:18:23] [INFO] 前端界面日志面板已安全就绪，拦截引擎启动完毕！
+[2026-04-19 18:18:23] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 18:20:09] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 18:31:19] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 18:31:19] [INFO] 正在加载配置管理器...
+[2026-04-19 18:31:19] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 18:31:20] [INFO] 前端界面日志面板已安全就绪，拦截引擎启动完毕！
+[2026-04-19 18:31:21] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 18:31:29] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 18:31:33] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 18:31:44] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 18:32:00] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 18:36:39] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 18:36:39] [INFO] 正在加载配置管理器...
+[2026-04-19 18:36:39] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 18:36:41] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 18:36:41] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 18:37:29] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 18:37:39] [INFO] 表情配置 [安安#开心#] 已成功保存。
+[2026-04-19 18:37:53] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:01:11] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 19:01:11] [INFO] 正在加载配置管理器...
+[2026-04-19 19:01:11] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 19:01:13] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 19:01:13] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 19:01:17] [INFO] 底层键盘钩子挂载成功，当前监听 2 个键位。
+[2026-04-19 19:01:23] [WARNING] 发送中断：当前没有装填任何表情。
+[2026-04-19 19:01:24] [INFO] 已装填表情: 安安#开心#
+[2026-04-19 19:01:24] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:01:25] [INFO] 开始发射表情: 安安#开心#
+[2026-04-19 19:01:25] [DEBUG] 剪贴板无底图，将生成纯文本气泡。
+[2026-04-19 19:01:25] [DEBUG] 模拟执行 Ctrl+A 与 Ctrl+X...
+[2026-04-19 19:01:25] [DEBUG] 获取到文本: 'import keyboard
+import time
+import sys
+import os
+from PySide6.QtCore import QObject, Signal, Slot
+
+# 统一路径规范
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from Core.clipboard_mgr import ClipboardManager
+from Core.image_generator import ImageGenerator
+from Core.logger import logger
+
+class ChatBoxController(QObject):
+    """
+    核心工作流控制器 (两步走：装填 -> 发射)
+    负责桥接: 键盘监听 <-> HUD悬浮窗 <-> 剪贴板管理 <-> 图像引擎
+    """
+    arm_signal = Signal(dict)
+    execute_signal = Signal()
+
+    def __init__(self, clipboard_mgr: ClipboardManager, image_gen: ImageGenerator):
+        super().__init__()
+        self.clipboard_mgr = clipboard_mgr
+        self.image_gen = image_gen
+        
+        self.is_running = False
+        self.active_hotkeys = []  
+        self.emotes_configs = []  
+        self.global_settings = {}
+        
+        self.armed_emote_cfg = None 
+        self.hud_callback = None
+        
+        # 绑定信号到主线程槽函数
+        self.arm_signal.connect(self._process_arm)
+        self.execute_signal.connect(self._process_execute)
+
+    def start_listening(self, emotes_configs: list, global_settings: dict, hud_callback=None):
+        """挂载全局钩子"""
+        if self.is_running:
+            self.stop_listening()
+
+        self.emotes_configs = emotes_configs
+        self.global_settings = global_settings
+        self.hud_callback = hud_callback
+        self.active_hotkeys.clear()
+
+        is_block = self.global_settings.get("block_keys", True)
+
+        # 1. 注册表情装填键
+        for cfg in self.emotes_configs:
+            if not cfg.get("is_enabled", True):
+                continue
+            
+            hk = cfg.get("hotkey", "").strip().lower()
+            if hk:
+                try:
+                    keyboard.add_hotkey(hk, self._emit_arm, args=(cfg,), suppress=is_block)
+                    self.active_hotkeys.append(hk)
+                except Exception as e:
+                    logger.warning(f"表情 [{cfg.get('name')}] 的快捷键 {hk} 注册失败: {e}")
+
+        # 2. 注册全局发射键
+        global_hk = self.global_settings.get("global_trigger_key", "alt+enter").lower()
+        if global_hk:
+            try:
+                keyboard.add_hotkey(global_hk, self._emit_execute, suppress=is_block)
+                self.active_hotkeys.append(f"全局发送:{global_hk}")
+            except Exception as e:
+                logger.warning(f"全局发送快捷键 {global_hk} 注册失败: {e}")
+
+        self.is_running = True
+        logger.info(f"底层键盘钩子挂载成功，当前监听 {len(self.active_hotkeys)} 个键位。")
+
+    def stop_listening(self):
+        """卸载全局钩子"""
+        keyboard.unhook_all()
+        self.active_hotkeys.clear()
+        self.is_running = False
+        logger.info("底层键盘钩子已全面卸载。")
+
+    def _emit_arm(self, cfg):
+        """子线程：触发装填信号"""
+        self.arm_signal.emit(cfg)
+
+    def _emit_execute(self):
+        """子线程：触发发射信号"""
+        self.execute_signal.emit()
+
+    @Slot(dict)
+    def _process_arm(self, cfg: dict):
+        """主线程：处理装填逻辑"""
+        self.armed_emote_cfg = cfg
+        name = cfg.get("name", "未知")
+        img_path = os.path.join(cfg.get("_folder_path", ""), cfg.get("base_image", "base.png"))
+        
+        logger.info(f"已装填表情: {name}")
+        
+        if self.hud_callback:
+            self.hud_callback(name, img_path)
+
+    @Slot()
+    def _process_execute(self):
+        """主线程：处理发射逻辑"""
+        if not self.armed_emote_cfg:
+            logger.warning("发送中断：当前没有装填任何表情。")
+            return
+
+        name = self.armed_emote_cfg.get("name", "未知")
+        logger.info(f"开始发射表情: {name}")
+        
+        delay = self.global_settings.get("delay_ms", 150) / 1000.0
+
+        # 1. 备份底图
+        if self.clipboard_mgr.check_and_backup_image():
+            logger.debug("剪贴板底图已备份。")
+        else:
+            logger.debug("剪贴板无底图，将生成纯文本气泡。")
+
+        # 2. 剪切文字
+        logger.debug("模拟执行 Ctrl+A 与 Ctrl+X...")
+        keyboard.send('ctrl+a')
+        time.sleep(0.02)
+        keyboard.send('ctrl+x')
+        
+        text = self.clipboard_mgr.grab_text_after_cut(delay=delay)
+        if text:
+            logger.debug(f"获取到文本: '{text}'")
+        else:
+            logger.debug("未获取到选中文本。")
+
+        # 3. 图像合成
+        logger.debug("图像引擎正在合成...")
+        try:
+            base_image = self.clipboard_mgr.get_cached_image()
+            generated_image = self.image_gen.generate(base_image, text, self.armed_emote_cfg)
+            self.clipboard_mgr.set_image(generated_image)
+            logger.debug("合成图像已写入剪贴板。")
+        except Exception as e:
+            logger.error(f"图像合成失败: {e}")
+            return
+
+        # 4. 粘贴与发送
+        logger.debug("模拟执行 Ctrl+V 粘贴...")
+        keyboard.send('ctrl+v')
+        
+        time.sleep(delay)
+        
+        logger.debug("模拟执行 Enter 发送...")
+        keyboard.send('enter')
+        
+        logger.info(f"表情 [{name}] 发射完毕！")'
+[2026-04-19 19:01:26] [DEBUG] 图像引擎正在合成...
+[2026-04-19 19:01:31] [DEBUG] 合成图像已写入剪贴板。
+[2026-04-19 19:01:31] [DEBUG] 模拟执行 Ctrl+V 粘贴...
+[2026-04-19 19:01:31] [DEBUG] 模拟执行 Enter 发送...
+[2026-04-19 19:01:31] [INFO] 表情 [安安#开心#] 发射完毕！
+[2026-04-19 19:01:35] [INFO] 开始发射表情: 安安#开心#
+[2026-04-19 19:01:35] [DEBUG] 剪贴板底图已备份。
+[2026-04-19 19:01:35] [DEBUG] 模拟执行 Ctrl+A 与 Ctrl+X...
+[2026-04-19 19:01:35] [DEBUG] 未获取到选中文本。
+[2026-04-19 19:01:35] [DEBUG] 图像引擎正在合成...
+[2026-04-19 19:01:35] [DEBUG] 合成图像已写入剪贴板。
+[2026-04-19 19:01:35] [DEBUG] 模拟执行 Ctrl+V 粘贴...
+[2026-04-19 19:01:35] [DEBUG] 模拟执行 Enter 发送...
+[2026-04-19 19:01:35] [INFO] 表情 [安安#开心#] 发射完毕！
+[2026-04-19 19:01:48] [INFO] 已装填表情: 安安#开心#
+[2026-04-19 19:01:48] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:01:48] [INFO] 开始发射表情: 安安#开心#
+[2026-04-19 19:01:48] [DEBUG] 剪贴板底图已备份。
+[2026-04-19 19:01:48] [DEBUG] 模拟执行 Ctrl+A 与 Ctrl+X...
+[2026-04-19 19:01:49] [DEBUG] 未获取到选中文本。
+[2026-04-19 19:01:49] [DEBUG] 图像引擎正在合成...
+[2026-04-19 19:01:49] [DEBUG] 合成图像已写入剪贴板。
+[2026-04-19 19:01:49] [DEBUG] 模拟执行 Ctrl+V 粘贴...
+[2026-04-19 19:01:49] [DEBUG] 模拟执行 Enter 发送...
+[2026-04-19 19:01:49] [INFO] 表情 [安安#开心#] 发射完毕！
+[2026-04-19 19:04:26] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 19:04:26] [INFO] 正在加载配置管理器...
+[2026-04-19 19:04:26] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 19:04:28] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 19:04:28] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 19:04:30] [INFO] 键盘底层钩子注入成功 | 当前监控键位: ['alt+1', '全局输出:alt+enter']
+[2026-04-19 19:04:33] [INFO] 已装填表情 -> 安安#开心#
+[2026-04-19 19:04:33] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:04:33] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:04:34] [DEBUG] 悬浮窗弹窗指令已成功下发至 UI 层。
+[2026-04-19 19:04:35] [INFO] ========== 发射表情: 安安#开心# ==========
+[2026-04-19 19:04:35] [DEBUG] 剪贴板无底图，将生成纯文本气泡
+[2026-04-19 19:04:35] [DEBUG] 尝试补发 Ctrl+X...
+[2026-04-19 19:04:35] [DEBUG] 获取到文本: 'import keyboard
+import time
+import sys
+import os
+import signal
+from PySide6.QtCore import QObject, Signal, Slot, Qt
+from PySide6.QtWidgets import QApplication
+from PIL import Image
+
+# 统一路径规范，确保直接运行或被 main.py 调用时都能正确导入 Core 模块
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
+
+# 兼容文件夹大小写问题 (Core vs core) 以及直接独立运行的情况
+try:
+    from core.clipboard_mgr import ClipboardManager
+    from core.image_generator import ImageGenerator
+except ModuleNotFoundError:
+    try:
+        from Core.clipboard_mgr import ClipboardManager
+        from Core.image_generator import ImageGenerator
+    except ModuleNotFoundError:
+        # 终极 Fallback：把当前所在目录加入路径，直接导入同级文件
+        if current_dir not in sys.path:
+            sys.path.append(current_dir)
+        from clipboard_mgr import ClipboardManager
+        from image_generator import ImageGenerator
+
+# 引入规范的日志系统
+from Core.logger import logger
+
+class ChatBoxController(QObject):
+    """
+    核心工作流控制器 (两步走：装填 -> 发射)
+    负责桥接: 键盘监听 <-> HUD悬浮窗 <-> 剪贴板管理 <-> 图像引擎
+    """
+    arm_signal = Signal(dict)
+    execute_signal = Signal()
+    quit_signal = Signal()
+
+    def __init__(self, clipboard_mgr: ClipboardManager, image_gen: ImageGenerator):
+        super().__init__()
+        self.clipboard_mgr = clipboard_mgr
+        self.image_gen = image_gen
+        
+        self.is_running = False
+        self.active_hotkeys = []  
+        self.emotes_configs = []  
+        self.global_settings = {}
+        
+        # 核心状态：当前已经装填完毕待发射的表情
+        self.armed_emote_cfg = None 
+        # UI 传进来的悬浮窗回调函数
+        self.hud_callback = None
+        
+        # 绑定信号到主线程槽函数
+        self.arm_signal.connect(self._process_arm)
+        self.execute_signal.connect(self._process_execute)
+
+    def start_listening(self, emotes_configs: list, global_settings: dict, hud_callback=None):
+        """挂载全局钩子"""
+        if self.is_running:
+            self.stop_listening()
+
+        self.emotes_configs = emotes_configs
+        self.global_settings = global_settings
+        self.hud_callback = hud_callback
+        self.active_hotkeys.clear()
+
+        is_block = self.global_settings.get("block_keys", True)
+
+        # 1. 注册表情装填键
+        for cfg in self.emotes_configs:
+            if not cfg.get("is_enabled", True):
+                continue
+            
+            hk = cfg.get("hotkey", "").strip().lower()
+            if hk:
+                try:
+                    keyboard.add_hotkey(hk, self.trigger_arm, args=(cfg,), suppress=is_block)
+                    self.active_hotkeys.append(hk)
+                except Exception as e:
+                    logger.warning(f"表情 [{cfg.get('name')}] 的快捷键 {hk} 注册失败: {e}")
+
+        # 2. 注册全局发射键
+        global_hk = self.global_settings.get("global_trigger_key", "alt+enter").lower()
+        if global_hk:
+            try:
+                keyboard.add_hotkey(global_hk, self.trigger_execute, suppress=is_block)
+                self.active_hotkeys.append(f"全局输出:{global_hk}")
+            except Exception as e:
+                logger.warning(f"全局发射键 {global_hk} 注册失败: {e}")
+
+        self.is_running = True
+        logger.info(f"键盘底层钩子注入成功 | 当前监控键位: {self.active_hotkeys}")
+
+    def stop_listening(self):
+        """卸载全局钩子"""
+        keyboard.unhook_all()
+        self.active_hotkeys.clear()
+        self.is_running = False
+        logger.info("键盘底层钩子已卸载")
+
+    def trigger_arm(self, cfg):
+        """子线程：触发装填信号"""
+        self.arm_signal.emit(cfg)
+
+    def trigger_execute(self):
+        """子线程：触发发射信号"""
+        self.execute_signal.emit()
+
+    @Slot(dict)
+    def _process_arm(self, cfg: dict):
+        """主线程：处理装填逻辑"""
+        self.armed_emote_cfg = cfg
+        name = cfg.get("name", "未知")
+        img_path = os.path.join(cfg.get("_folder_path", ""), cfg.get("base_image", "base.png"))
+        
+        logger.info(f"已装填表情 -> {name}")
+        
+        if self.hud_callback:
+            logger.debug(f"执行 HUD 弹窗指令: {name}")
+            self.hud_callback(name, img_path)
+            logger.debug("悬浮窗弹窗指令已成功下发至 UI 层。")
+
+    @Slot()
+    def _process_execute(self):
+        """主线程：处理发射逻辑"""
+        if not self.armed_emote_cfg:
+            logger.warning("发送中断：当前没有装填任何表情。")
+            return
+
+        name = self.armed_emote_cfg.get("name", "未知")
+        logger.info(f"========== 发射表情: {name} ==========")
+        
+        delay = self.global_settings.get("delay_ms", 150) / 1000.0
+
+        # 1. 备份底图
+        has_base_image = self.clipboard_mgr.check_and_backup_image()
+        if has_base_image:
+            img_size = self.clipboard_mgr.get_cached_image().size
+            logger.debug(f"成功备份底图尺寸: {img_size}")
+        else:
+            logger.debug("剪贴板无底图，将生成纯文本气泡")
+
+        # 2. 剪切文字
+        logger.debug("尝试补发 Ctrl+X...")
+        keyboard.send('ctrl+a')
+        time.sleep(0.02)
+        keyboard.send('ctrl+x')
+        
+        text = self.clipboard_mgr.grab_text_after_cut(delay=delay)
+        
+        if text:
+            logger.debug(f"获取到文本: '{text}'")
+        elif not has_base_image:
+            # 还原您原本精准的中断逻辑：如果没文本且没底图，直接取消本次发送
+            logger.info("工作流中断 | 没有选中任何文本或底图")
+            return
+
+        # 3. 图像合成
+        try:
+            base_image = self.clipboard_mgr.get_cached_image()
+            generated_image = self.image_gen.generate(base_image, text, self.armed_emote_cfg)
+            self.clipboard_mgr.set_image(generated_image)
+            logger.debug("合成图像已写入剪贴板")
+        except Exception as e:
+            logger.error(f"图像合成失败: {e}")
+            return
+
+        # 4. 粘贴与发送
+        logger.debug("尝试粘贴 (Ctrl+V)...")
+        keyboard.send('ctrl+v')
+        
+        time.sleep(delay)
+        
+        logger.debug("尝试发送 (Enter)...")
+        keyboard.send('enter')
+        
+        logger.info(f"========== {name} 发射完毕 ==========")
+
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    app = QApplication(sys.argv)
+    app.setQuitOnLastWindowClosed(False)
+
+    logger.info("--- 两步走监听器独立测试 ---")
+    cb_mgr = ClipboardManager()
+    img_gen = ImageGenerator()
+    controller = ChatBoxController(cb_mgr, img_gen)
+    
+    # 构建测试用的伪配置
+    test_emotes = [{
+        "name": "测试表情",
+        "hotkey": "alt+1",
+        "is_enabled": True
+    }]
+    test_global = {
+        "global_trigger_key": "alt+enter",
+        "block_keys": False,
+        "delay_ms": 150
+    }
+    
+    try:
+        controller.start_listening(test_emotes, test_global)
+        keyboard.add_hotkey('esc', lambda: app.quit())
+        sys.exit(app.exec())
+    except KeyboardInterrupt:
+        pass
+    finally:
+        controller.stop_listening()'
+[2026-04-19 19:04:40] [DEBUG] 合成图像已写入剪贴板
+[2026-04-19 19:04:40] [DEBUG] 尝试粘贴 (Ctrl+V)...
+[2026-04-19 19:04:40] [DEBUG] 尝试发送 (Enter)...
+[2026-04-19 19:04:40] [INFO] ========== 安安#开心# 发射完毕 ==========
+[2026-04-19 19:04:40] [INFO] ========== 发射表情: 安安#开心# ==========
+[2026-04-19 19:04:40] [DEBUG] 成功备份底图尺寸: (400, 300)
+[2026-04-19 19:04:40] [DEBUG] 尝试补发 Ctrl+X...
+[2026-04-19 19:04:41] [DEBUG] 合成图像已写入剪贴板
+[2026-04-19 19:04:41] [DEBUG] 尝试粘贴 (Ctrl+V)...
+[2026-04-19 19:04:41] [DEBUG] 尝试发送 (Enter)...
+[2026-04-19 19:04:41] [INFO] ========== 安安#开心# 发射完毕 ==========
+[2026-04-19 19:04:50] [INFO] ========== 发射表情: 安安#开心# ==========
+[2026-04-19 19:04:50] [DEBUG] 成功备份底图尺寸: (400, 300)
+[2026-04-19 19:04:50] [DEBUG] 尝试补发 Ctrl+X...
+[2026-04-19 19:04:50] [DEBUG] 合成图像已写入剪贴板
+[2026-04-19 19:04:50] [DEBUG] 尝试粘贴 (Ctrl+V)...
+[2026-04-19 19:04:50] [DEBUG] 尝试发送 (Enter)...
+[2026-04-19 19:04:50] [INFO] ========== 安安#开心# 发射完毕 ==========
+[2026-04-19 19:05:58] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 19:05:58] [INFO] 正在加载配置管理器...
+[2026-04-19 19:05:58] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 19:06:00] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 19:06:01] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 19:06:09] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:11:56] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 19:11:56] [INFO] 正在加载配置管理器...
+[2026-04-19 19:11:56] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 19:11:58] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 19:11:59] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 19:12:01] [INFO] 键盘底层钩子注入成功 | 当前监控键位: ['alt+1', '全局输出:alt+enter']
+[2026-04-19 19:12:13] [DEBUG] 快捷键拦截 | 当前运行在 code.exe，非白名单目标，已忽略操作。
+[2026-04-19 19:12:20] [DEBUG] 快捷键拦截 | 当前运行在 code.exe，非白名单目标，已忽略操作。
+[2026-04-19 19:12:20] [DEBUG] 快捷键拦截 | 当前运行在 code.exe，非白名单目标，已忽略操作。
+[2026-04-19 19:12:21] [DEBUG] 快捷键拦截 | 当前运行在 code.exe，非白名单目标，已忽略操作。
+[2026-04-19 19:15:03] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 19:15:03] [INFO] 正在加载配置管理器...
+[2026-04-19 19:15:03] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 19:15:05] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 19:15:05] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 19:15:07] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:19:20] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 19:19:20] [INFO] 正在加载配置管理器...
+[2026-04-19 19:19:20] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 19:19:21] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 19:19:21] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 19:19:27] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:28:20] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 19:28:20] [INFO] 正在加载配置管理器...
+[2026-04-19 19:28:20] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 19:28:23] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 19:28:23] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 19:28:31] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:29:08] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 19:29:08] [INFO] 正在加载配置管理器...
+[2026-04-19 19:29:08] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 19:29:10] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 19:29:11] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 19:29:17] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:37:35] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 19:37:35] [INFO] 正在加载配置管理器...
+[2026-04-19 19:37:35] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 19:37:37] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 19:37:37] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 19:37:56] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:57:33] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 19:57:33] [INFO] 正在加载配置管理器...
+[2026-04-19 19:57:33] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 19:57:35] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 19:57:36] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 19:57:59] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:57:59] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:58:00] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 19:59:40] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:40] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:41] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:43] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:45] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:45] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:45] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:45] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:46] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:46] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:46] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:46] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:46] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:47] [INFO] 偏好设置已自动热更新！
+[2026-04-19 19:59:47] [INFO] 偏好设置已自动热更新！
+[2026-04-19 20:03:02] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 20:03:02] [INFO] 正在加载配置管理器...
+[2026-04-19 20:03:02] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 20:03:04] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 20:03:04] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 20:03:20] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 20:31:19] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 20:31:19] [INFO] 正在加载配置管理器...
+[2026-04-19 20:31:19] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 20:31:27] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 20:31:28] [INFO] 核心系统加载完毕，全部就绪。
+[2026-04-19 20:57:22] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 20:57:22] [INFO] 正在加载配置管理器...
+[2026-04-19 20:57:22] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 20:57:23] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 20:57:24] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 20:57:24] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 20:59:48] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 20:59:48] [INFO] 正在加载配置管理器...
+[2026-04-19 20:59:48] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 20:59:51] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 20:59:52] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 20:59:52] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 21:00:16] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:00:16] [INFO] 正在加载配置管理器...
+[2026-04-19 21:00:16] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 21:00:16] [CRITICAL] 程序发生未捕获的严重崩溃异常:
+Traceback (most recent call last):
+  File "e:\NewProject\main.py", line 63, in <module>
+    main()
+  File "e:\NewProject\main.py", line 40, in main
+    window = MainWindow(config_mgr=config_mgr, controller=controller)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\NewProject\Ui\main_window.py", line 746, in __init__
+    self.stacked_widget.addWidget(self.create_home_page())
+                                  ^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\NewProject\Ui\main_window.py", line 870, in create_home_page
+    center_layout.addWidget(self.start_btn, alignment=Qt.AlignCenter)
+                            ^^^^^^^^^^^^^^
+AttributeError: 'MainWindow' object has no attribute 'start_btn'
+[2026-04-19 21:00:25] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:00:25] [INFO] 正在加载配置管理器...
+[2026-04-19 21:00:25] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 21:00:25] [CRITICAL] 程序发生未捕获的严重崩溃异常:
+Traceback (most recent call last):
+  File "e:\NewProject\main.py", line 63, in <module>
+    main()
+  File "e:\NewProject\main.py", line 40, in main
+    window = MainWindow(config_mgr=config_mgr, controller=controller)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\NewProject\Ui\main_window.py", line 746, in __init__
+    self.stacked_widget.addWidget(self.create_home_page())
+                                  ^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\NewProject\Ui\main_window.py", line 870, in create_home_page
+    center_layout.addWidget(self.start_btn, alignment=Qt.AlignCenter)
+                            ^^^^^^^^^^^^^^
+AttributeError: 'MainWindow' object has no attribute 'start_btn'
+[2026-04-19 21:02:05] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:02:05] [INFO] 正在加载配置管理器...
+[2026-04-19 21:02:05] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 21:02:06] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 21:02:07] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 21:02:07] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 21:03:01] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:03:01] [INFO] 正在加载配置管理器...
+[2026-04-19 21:03:01] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 21:03:02] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 21:03:03] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 21:03:04] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 21:20:17] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:20:17] [INFO] 正在加载配置管理器...
+[2026-04-19 21:20:17] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 21:20:20] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 21:20:21] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 21:20:21] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 21:21:33] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:21:33] [INFO] 正在加载配置管理器...
+[2026-04-19 21:21:33] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 21:21:36] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 21:21:36] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 21:21:36] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 21:22:29] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:22:29] [INFO] 正在加载配置管理器...
+[2026-04-19 21:22:29] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 21:22:31] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 21:22:31] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 21:22:32] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 21:25:33] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:25:33] [INFO] 正在加载配置管理器...
+[2026-04-19 21:25:33] [INFO] 正在启动极简 UI 主界面...
+[2026-04-19 21:25:35] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 21:25:35] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 21:25:36] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 21:31:30] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:31:30] [INFO] 正在加载配置管理器...
+[2026-04-19 21:31:30] [CRITICAL] 程序发生未捕获的严重崩溃异常:
+Traceback (most recent call last):
+  File "e:\NewProject\main.py", line 63, in <module>
+    main()
+  File "e:\NewProject\main.py", line 36, in main
+    config_mgr.load_global_settings()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ConfigManager' object has no attribute 'load_global_settings'
+[2026-04-19 21:33:41] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:33:41] [INFO] 正在加载配置管理器...
+[2026-04-19 21:33:41] [CRITICAL] 程序发生未捕获的严重崩溃异常:
+Traceback (most recent call last):
+  File "e:\NewProject\main.py", line 63, in <module>
+    main()
+  File "e:\NewProject\main.py", line 36, in main
+    config_mgr.load_global_settings()
+  File "e:\NewProject\Core\config_mgr.py", line 25, in load_global_settings
+    "block_keys": true,
+                  ^^^^
+NameError: name 'true' is not defined
+[2026-04-19 21:33:43] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:33:43] [INFO] 正在加载配置管理器...
+[2026-04-19 21:33:43] [CRITICAL] 程序发生未捕获的严重崩溃异常:
+Traceback (most recent call last):
+  File "e:\NewProject\main.py", line 63, in <module>
+    main()
+  File "e:\NewProject\main.py", line 36, in main
+    config_mgr.load_global_settings()
+  File "e:\NewProject\Core\config_mgr.py", line 25, in load_global_settings
+    "block_keys": true,
+                  ^^^^
+NameError: name 'true' is not defined
+[2026-04-19 21:38:57] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:38:57] [INFO] 正在加载配置管理器...
+[2026-04-19 21:38:57] [INFO] 正在启动UI 主界面...
+[2026-04-19 21:39:00] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 21:39:01] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 21:39:01] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 21:40:23] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:40:23] [INFO] 正在加载配置管理器...
+[2026-04-19 21:40:23] [INFO] 正在启动UI 主界面...
+[2026-04-19 21:40:23] [WARNING] 找不到 SVG 图标: ./Assets/Svg\settings-2
+[2026-04-19 21:40:26] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 21:40:27] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 21:40:27] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 21:40:45] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:40:45] [INFO] 正在加载配置管理器...
+[2026-04-19 21:40:45] [INFO] 正在启动UI 主界面...
+[2026-04-19 21:40:47] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 21:40:47] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 21:40:47] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 21:42:20] [INFO] 表情配置 [安安#正常#] 已成功保存。
+[2026-04-19 21:43:34] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:43:34] [INFO] 正在加载配置管理器...
+[2026-04-19 21:43:34] [INFO] 正在启动UI 主界面...
+[2026-04-19 21:43:37] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 21:43:37] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 21:43:38] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 21:46:22] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:46:22] [INFO] 正在加载配置管理器...
+[2026-04-19 21:46:23] [INFO] 正在启动UI 主界面...
+[2026-04-19 21:47:04] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 21:47:04] [INFO] 正在加载配置管理器...
+[2026-04-19 21:47:04] [INFO] 正在启动UI 主界面...
+[2026-04-19 21:47:05] [INFO] 前端界面日志面板已进行深层暴力拦截，完美接管一切输出！
+[2026-04-19 21:47:05] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 21:47:06] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 21:47:29] [INFO] 表情配置 [安安#正常#] 已成功保存。
+[2026-04-19 21:47:35] [INFO] 表情配置 [安安#开心#] 已成功保存。
+[2026-04-19 21:48:11] [INFO] 表情配置 [安安#害羞#] 已成功保存。
+[2026-04-19 21:48:57] [INFO] 表情配置 [安安#正常#] 已成功保存。
+[2026-04-19 21:50:33] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:50:33] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:50:33] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:50:33] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:50:34] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:51:11] [INFO] 表情配置 [安安#愤怒#] 已成功保存。
+[2026-04-19 21:51:20] [INFO] 表情配置 [安安#无语#] 已成功保存。
+[2026-04-19 21:51:27] [INFO] 表情配置 [安安#病娇#] 已成功保存。
+[2026-04-19 21:51:35] [INFO] 表情配置 [安安#害羞#] 已成功保存。
+[2026-04-19 21:51:41] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:51:42] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:51:42] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:51:42] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:51:42] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:51:42] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:51:43] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:51:43] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:57:33] [INFO] 表情配置 [安安#愤怒#] 已成功保存。
+[2026-04-19 21:57:49] [INFO] 表情配置 [安安#害羞#] 已成功保存。
+[2026-04-19 21:58:02] [INFO] 表情配置 [安安#无语#] 已成功保存。
+[2026-04-19 21:58:09] [INFO] 表情配置 [安安#病娇#] 已成功保存。
+[2026-04-19 21:58:22] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:58:23] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:58:23] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:58:23] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:58:23] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:58:23] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:58:23] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:58:25] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:58:27] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:58:27] [INFO] 偏好设置已自动热更新！
+[2026-04-19 21:58:28] [INFO] 偏好设置已自动热更新！
+[2026-04-19 22:00:03] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 22:00:03] [INFO] 正在加载配置管理器...
+[2026-04-19 22:00:03] [INFO] 正在启动UI 主界面...
+[2026-04-19 22:00:06] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 22:00:06] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 22:00:20] [INFO] 表情配置 [安安#愤怒#] 已成功保存。
+[2026-04-19 22:17:21] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 22:17:21] [INFO] 正在加载配置管理器...
+[2026-04-19 22:17:21] [CRITICAL] 程序发生未捕获的严重崩溃异常:
+Traceback (most recent call last):
+  File "main.py", line 63, in <module>
+    main()
+  File "main.py", line 37, in main
+    config_mgr.load_all_emotes()
+  File "Core\config_mgr.py", line 52, in load_all_emotes
+    self._create_default_emote_template()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ConfigManager' object has no attribute '_create_default_emote_template'
+[2026-04-19 22:21:36] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 22:21:36] [INFO] 正在加载配置管理器...
+[2026-04-19 22:21:36] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:21:36] [INFO] 正在启动UI 主界面...
+[2026-04-19 22:21:39] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:21:39] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 22:21:40] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 22:24:16] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:24:16] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:24:16] [INFO] 偏好设置已自动热更新！
+[2026-04-19 22:24:17] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:24:17] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:24:17] [INFO] 偏好设置已自动热更新！
+[2026-04-19 22:25:57] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:25:57] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:25:57] [INFO] 偏好设置已自动热更新！
+[2026-04-19 22:25:57] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:25:57] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:25:57] [INFO] 偏好设置已自动热更新！
+[2026-04-19 22:25:57] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:25:57] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:25:57] [INFO] 偏好设置已自动热更新！
+[2026-04-19 22:25:58] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:25:58] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:25:58] [INFO] 偏好设置已自动热更新！
+[2026-04-19 22:32:32] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 22:32:32] [INFO] 正在加载配置管理器...
+[2026-04-19 22:32:32] [INFO] 正在启动UI 主界面...
+[2026-04-19 22:32:36] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 22:32:37] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 22:35:34] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 22:35:34] [INFO] 正在加载配置管理器...
+[2026-04-19 22:35:34] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:35:34] [INFO] 正在启动UI 主界面...
+[2026-04-19 22:35:36] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:35:37] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 22:35:37] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 22:39:21] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 22:39:21] [INFO] 正在加载配置管理器...
+[2026-04-19 22:39:21] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:39:21] [INFO] 正在启动UI 主界面...
+[2026-04-19 22:39:22] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:39:23] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 22:39:23] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 22:39:38] [INFO] 表情配置 [新建表情_1776609573] 已成功保存。
+[2026-04-19 22:39:38] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:39:38] [WARNING] EmoteConfigs 文件夹为空或不存在，请确保打包时附带了表情包配置。
+[2026-04-19 22:49:40] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 22:49:40] [INFO] 正在加载配置管理器...
+[2026-04-19 22:49:40] [INFO] 正在启动UI 主界面...
+[2026-04-19 22:49:44] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 22:49:45] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 23:37:33] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 23:37:33] [INFO] 正在加载配置管理器...
+[2026-04-19 23:37:33] [INFO] 正在启动UI 主界面...
+[2026-04-19 23:37:44] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 23:37:44] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 23:40:52] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 23:40:52] [INFO] 正在加载配置管理器...
+[2026-04-19 23:40:52] [INFO] 正在启动UI 主界面...
+[2026-04-19 23:40:54] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 23:40:54] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 23:47:51] [INFO] 偏好设置已自动热更新！
+[2026-04-19 23:47:52] [INFO] 偏好设置已自动热更新！
+[2026-04-19 23:47:58] [DEBUG] 执行 HUD 弹窗指令: 安安#愤怒#
+[2026-04-19 23:47:59] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 23:47:59] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-19 23:48:15] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 23:48:15] [INFO] 正在加载配置管理器...
+[2026-04-19 23:48:15] [INFO] 正在启动UI 主界面...
+[2026-04-19 23:48:18] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 23:48:18] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 23:48:32] [INFO] 偏好设置已自动热更新！
+[2026-04-19 23:48:34] [INFO] 偏好设置已自动热更新！
+[2026-04-19 23:48:35] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 23:48:35] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-19 23:51:35] [INFO] 正在初始化底层引擎组件...
+[2026-04-19 23:51:35] [INFO] 正在加载配置管理器...
+[2026-04-19 23:51:35] [INFO] 正在启动UI 主界面...
+[2026-04-19 23:51:37] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-19 23:51:38] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-19 23:51:52] [INFO] 偏好设置已自动热更新！
+[2026-04-19 23:51:52] [INFO] 偏好设置已自动热更新！
+[2026-04-19 23:51:54] [INFO] 偏好设置已自动热更新！
+[2026-04-19 23:51:55] [INFO] 偏好设置已自动热更新！
+[2026-04-19 23:51:56] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-19 23:51:56] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-20 00:00:25] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:00:25] [INFO] 正在加载配置管理器...
+[2026-04-20 00:00:25] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:02:58] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:02:58] [INFO] 正在加载配置管理器...
+[2026-04-20 00:02:58] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:03:01] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-20 00:03:02] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-20 00:03:13] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:03:13] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:03:15] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:03:15] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:03:16] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:03:16] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:03:16] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:03:17] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:03:20] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-20 00:03:20] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-20 00:03:23] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-20 00:03:24] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-20 00:03:24] [DEBUG] 执行 HUD 弹窗指令: 安安#愤怒#
+[2026-04-20 00:03:24] [DEBUG] 执行 HUD 弹窗指令: 安安#害羞#
+[2026-04-20 00:03:25] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:03:27] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:03:27] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-20 00:04:15] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:04:15] [INFO] 正在加载配置管理器...
+[2026-04-20 00:04:15] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:04:17] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-20 00:04:18] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-20 00:04:23] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:04:24] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:04:24] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-20 00:04:25] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-20 00:04:25] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-20 00:04:26] [DEBUG] 执行 HUD 弹窗指令: 安安#愤怒#
+[2026-04-20 00:04:29] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:04:37] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:04:38] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-20 00:04:39] [DEBUG] 执行 HUD 弹窗指令: 安安#愤怒#
+[2026-04-20 00:04:39] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-20 00:04:40] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-20 00:04:40] [DEBUG] 执行 HUD 弹窗指令: 安安#愤怒#
+[2026-04-20 00:04:40] [DEBUG] 执行 HUD 弹窗指令: 安安#害羞#
+[2026-04-20 00:04:41] [DEBUG] 执行 HUD 弹窗指令: 安安#无语#
+[2026-04-20 00:04:42] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-20 00:15:50] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-20 00:15:53] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-20 00:20:08] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:20:08] [INFO] 正在加载配置管理器...
+[2026-04-20 00:20:08] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:20:22] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:20:22] [INFO] 正在加载配置管理器...
+[2026-04-20 00:20:22] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:20:44] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:20:44] [INFO] 正在加载配置管理器...
+[2026-04-20 00:20:44] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:21:04] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:21:04] [INFO] 正在加载配置管理器...
+[2026-04-20 00:21:04] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:21:06] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-20 00:21:07] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-20 00:21:25] [INFO] 成功删除表情包: e:\NewProject\EmoteConfigs\emote_1776609573
+[2026-04-20 00:21:30] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:21:31] [INFO] 偏好设置已自动热更新！
+[2026-04-20 00:21:31] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-20 00:21:32] [DEBUG] 执行 HUD 弹窗指令: 安安#开心#
+[2026-04-20 00:21:32] [DEBUG] 执行 HUD 弹窗指令: 安安#愤怒#
+[2026-04-20 00:21:33] [DEBUG] 执行 HUD 弹窗指令: 安安#正常#
+[2026-04-20 00:36:58] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:36:58] [INFO] 正在加载配置管理器...
+[2026-04-20 00:36:58] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:37:01] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-20 00:37:02] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-20 00:41:48] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:41:48] [INFO] 正在加载配置管理器...
+[2026-04-20 00:41:48] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:41:51] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-20 00:41:51] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-20 00:47:23] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:47:23] [INFO] 正在加载配置管理器...
+[2026-04-20 00:47:23] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:47:27] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:47:27] [INFO] 正在加载配置管理器...
+[2026-04-20 00:47:27] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:48:25] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:48:25] [INFO] 正在加载配置管理器...
+[2026-04-20 00:48:25] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:49:52] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:49:52] [INFO] 正在加载配置管理器...
+[2026-04-20 00:49:52] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:49:55] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-20 00:49:56] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-20 00:53:16] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:53:16] [INFO] 正在加载配置管理器...
+[2026-04-20 00:53:16] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:57:57] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:57:57] [INFO] 正在加载配置管理器...
+[2026-04-20 00:57:57] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:57:59] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:57:59] [INFO] 正在加载配置管理器...
+[2026-04-20 00:57:59] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:59:55] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 00:59:55] [INFO] 正在加载配置管理器...
+[2026-04-20 00:59:55] [INFO] 正在启动UI 主界面...
+[2026-04-20 00:59:56] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-20 00:59:57] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-20 01:01:04] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 01:01:04] [INFO] 正在加载配置管理器...
+[2026-04-20 01:01:04] [INFO] 正在启动UI 主界面...
+[2026-04-20 01:01:06] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-20 01:01:07] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
+[2026-04-20 01:02:27] [INFO] 正在初始化底层引擎组件...
+[2026-04-20 01:02:27] [INFO] 正在加载配置管理器...
+[2026-04-20 01:02:27] [INFO] 正在启动UI 主界面...
+[2026-04-20 01:02:29] [INFO] 正在挂载并启动后台热键监听系统...
+[2026-04-20 01:02:29] [INFO] ✅ 引擎全部初始化完毕，现已处于待命状态！
