@@ -635,7 +635,7 @@ class MainWindow(QMainWindow):
         self.hud = FloatingHUD()
         
         
-        self.setWindowTitle("Anan's Sketchbook Chat Box")
+        self.setWindowTitle("Nanoka's Camera Roll")
         self.resize(1000, 720)
         self.setMinimumSize(850, 550)
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
@@ -1210,9 +1210,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(group2)
 
         # --------------- [分组 3：进阶与高级] ---------------
-        lbl3 = QLabel("语法与高亮")
-        lbl3.setStyleSheet("color: #888888; font-size: 12px; font-weight: bold; margin-left: 5px; background: transparent;")
-        layout.addWidget(lbl3)
+        ##lbl3 = QLabel("语法与高亮")
+        ##lbl3.setStyleSheet("color: #888888; font-size: 12px; font-weight: bold; margin-left: 5px; background: transparent;")
+        ##layout.addWidget(lbl3)
         
         group3 = SettingsGroup()
         
@@ -1230,11 +1230,11 @@ class MainWindow(QMainWindow):
                 self.on_data_changed()
                 logger.info("高亮规则已保存并即时生效！")
                 
-        edit_syntax_btn.clicked.connect(open_syntax_dialog)
-        r8 = SettingsRow("配置关键词变色引擎", "定义文字前缀与括弧内的特殊上色渲染逻辑", edit_syntax_btn, is_last=True)
+        ##edit_syntax_btn.clicked.connect(open_syntax_dialog)
+        ##r8 = SettingsRow("配置关键词变色引擎", "定义文字前缀与括弧内的特殊上色渲染逻辑", edit_syntax_btn, is_last=True)
         
-        group3.layout.addWidget(r8)
-        layout.addWidget(group3)
+        ##group3.layout.addWidget(r8)
+        ##layout.addWidget(group3)
         
         # --------------- [分组 4：窗口拦截与白名单] ---------------
         lbl4 = QLabel("进程白名单防误触")

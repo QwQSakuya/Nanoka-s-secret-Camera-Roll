@@ -220,10 +220,13 @@ class ChatBoxController(QObject):
             delay_ms = self.global_settings.get("delay_ms", 150)
             time.sleep(delay_ms / 1000.0)
             
-            keyboard.send('enter')
+            for _ in range (3):
+                keyboard.send('enter')
+                time.sleep(delay_ms / 1000.0)
+                print(f"[{time.strftime('%H:%M:%S')}] [INFO] 尝试发送 {emote_name}")
             self._clear_clipboard()
             
-            print(f"[{time.strftime('%H:%M:%S')}] [INFO] 成功发射 {emote_name}")
+            print(f"[{time.strftime('%H:%M:%S')}] [INFO] 成功发送 {emote_name}")
             
         except Exception as e:
             print(f"\n[{time.strftime('%H:%M:%S')}] [ERROR] 致命异常: {e}")

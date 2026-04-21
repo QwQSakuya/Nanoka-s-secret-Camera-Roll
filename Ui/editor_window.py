@@ -5,7 +5,7 @@ import shutil
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                                QPushButton, QLineEdit, QSlider, QColorDialog, 
                                QFrame, QApplication, QComboBox, QFileDialog, 
-                               QMessageBox, QScrollArea, QSpinBox, QGridLayout, QSizePolicy)
+                               QMessageBox, QScrollArea, QSpinBox, QGridLayout, QSizePolicy, QDialog)
 from PySide6.QtCore import Qt, Signal, Slot, QPoint, QTimer, Property, QPropertyAnimation, QEasingCurve, QByteArray, QSize
 from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QMouseEvent, QPainter, QPainterPath
 from PySide6.QtSvg import QSvgRenderer
@@ -53,6 +53,198 @@ NIGHT_GLASS_STYLE = """
 """
 
 # ================= 定制化 UI 组件 =================
+class ColorPickerBtn(QPushButton):
+    color_changed = Signal(str)
+
+    def __init__(self, color_hex="#ffffff", parent=None):
+        super().__init__(parent)
+        self.color_hex = color_hex
+        self.setFixedSize(28, 28)
+        self.setCursor(Qt.PointingHandCursor)
+        self.clicked.connect(self.pick_color)
+        self.update_style()
+
+    def set_color(self, hex_str):
+        self.color_hex = hex_str
+        self.update_style()
+
+    def pick_color(self):
+        c = QColorDialog.getColor(QColor(self.color_hex), self, "选择高亮颜色")
+        if c.isValid():
+            self.color_hex = c.name()
+            self.update_style()
+            self.color_changed.emit(self.color_hex)
+
+    def update_style(self):
+        self.setStyleSheet(f"background-color: {self.color_hex}; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px;")
+
+class RuleRowWidget(QWidget):
+    def __init__(self, rule_data=None, parent=None):
+        super().__init__(parent)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+        
+        self.type_combo = QComboBox()
+        self.type_combo.addItems(["包裹模式", "前缀模式"])
+        
+        self.start_input = QLineEdit()
+        self.start_input.setPlaceholderText("起 (如: 【)")
+        
+        self.end_input = QLineEdit()
+        self.end_input.setPlaceholderText("止 (如: 】)")
+        
+        input_style = "background-color: rgba(0,0,0,0.3); color: #ffffff; border: 1px solid rgba(255,255,255,0.1); padding: 8px; border-radius: 6px; font-weight: bold;"
+        self.type_combo.setStyleSheet(input_style)
+        self.start_input.setStyleSheet(input_style)
+        self.end_input.setStyleSheet(input_style)
+        
+        self.color_btn = ColorPickerBtn("#ffffff")
+        
+        self.del_btn = QPushButton("×")
+        self.del_btn.setFixedSize(28, 28)
+        self.del_btn.setStyleSheet("color: #ff453a; font-size: 18px; font-weight: bold; background: transparent; border: 1px solid rgba(255, 69, 58, 0.3); border-radius: 6px;")
+        self.del_btn.setCursor(Qt.PointingHandCursor)
+        self.del_btn.clicked.connect(self.deleteLater)
+        
+        layout.addWidget(self.type_combo)
+        layout.addWidget(self.start_input)
+        layout.addWidget(self.end_input)
+        layout.addWidget(self.color_btn)
+        layout.addWidget(self.del_btn)
+        
+        self.type_combo.currentTextChanged.connect(self.on_type_change)
+        
+        if rule_data:
+            idx = 1 if rule_data.get("type") == "prefix" else 0
+            self.type_combo.setCurrentIndex(idx)
+            self.start_input.setText(rule_data.get("start", ""))
+            self.end_input.setText(rule_data.get("end", ""))
+            self.color_btn.set_color(rule_data.get("color", "#ffffff"))
+            self.on_type_change(self.type_combo.currentText())
+
+    def on_type_change(self, text):
+        if text == "前缀模式":
+            self.end_input.clear()
+            self.end_input.setEnabled(False)
+            self.start_input.setPlaceholderText("前缀 (如: [伪证])")
+        else:
+            self.end_input.setEnabled(True)
+            self.start_input.setPlaceholderText("起 (如: 【)")
+            
+    def get_data(self):
+        return {
+            "type": "prefix" if self.type_combo.currentIndex() == 1 else "enclose",
+            "start": self.start_input.text().strip(),
+            "end": self.end_input.text().strip() if self.type_combo.currentIndex() == 0 else "",
+            "color": self.color_btn.color_hex
+        }
+
+class SyntaxHighlightDialog(QDialog):
+    def __init__(self, initial_rules, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setFixedSize(540, 500)
+        
+        self.setStyleSheet("""
+            QDialog { background: transparent; }
+            QFrame#MainFrame { background-color: rgba(30, 30, 30, 230); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+            QLabel { color: #ffffff; font-family: "Microsoft YaHei"; background: transparent; }
+            QLabel#Title { font-size: 18px; font-weight: bold; }
+            QLabel#Desc { color: #a0a0a0; font-size: 13px; line-height: 1.5; }
+            QPushButton.ModernBtn { border-radius: 8px; padding: 8px 20px; font-size: 13px; font-weight: bold; font-family: "Microsoft YaHei"; }
+            QPushButton#SaveBtn { background-color: #ffffff; color: #000000; border: none; }
+            QPushButton#SaveBtn:hover { background-color: #e0e0e0; }
+            QPushButton#CancelBtn { background-color: rgba(255,255,255,0.05); color: #e0e0e0; border: 1px solid rgba(255,255,255,0.1); }
+            QPushButton#CancelBtn:hover { background-color: rgba(255,255,255,0.1); color: #ffffff; }
+            QPushButton#AddBtn { background-color: transparent; color: #ffffff; border: 1px dashed rgba(255,255,255,0.3); border-radius: 8px; padding: 12px; font-weight: bold; font-size: 14px; }
+            QPushButton#AddBtn:hover { background-color: rgba(255, 255, 255, 0.1); border: 1px dashed #ffffff; }
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        frame = QFrame(self)
+        frame.setObjectName("MainFrame")
+        frame_layout = QVBoxLayout(frame)
+        frame_layout.setContentsMargins(30, 30, 30, 25)
+        
+        title = QLabel("关键词高亮与变色规则")
+        title.setObjectName("Title")
+        desc = QLabel("配置特殊的标点符号或前缀，自动改变生成的文字颜色。\n·包裹模式: 例如设置【】为紫色 -> 【反驳】自动变紫\n·前缀模式: 例如设置[伪证]为红色 -> [伪证]这是假的！")
+        desc.setObjectName("Desc")
+        
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setStyleSheet("background: transparent;")
+        
+        self.scroll_content = QWidget()
+        self.rules_layout = QVBoxLayout(self.scroll_content)
+        self.rules_layout.setContentsMargins(0, 10, 10, 10)
+        self.rules_layout.setSpacing(15)
+        self.rules_layout.setAlignment(Qt.AlignTop)
+        
+        scroll.setWidget(self.scroll_content)
+        
+        if not initial_rules:
+            self.add_rule({"type": "enclose", "start": "【", "end": "】", "color": "#ffffff"})
+            self.add_rule({"type": "enclose", "start": "[", "end": "]", "color": "#ffffff"})
+            self.add_rule({"type": "prefix", "start": "【伪证】", "end": "", "color": "#ff453a"})
+            self.add_rule({"type": "prefix", "start": "[伪证]", "end": "", "color": "#ff453a"})
+        else:
+            for r in initial_rules:
+                self.add_rule(r)
+                
+        add_btn = QPushButton("+ 添加新规则")
+        add_btn.setObjectName("AddBtn")
+        add_btn.setCursor(Qt.PointingHandCursor)
+        add_btn.clicked.connect(lambda: self.add_rule())
+        
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(15)
+        
+        save_btn = QPushButton("确定保存并生效")
+        save_btn.setProperty("class", "ModernBtn")
+        save_btn.setObjectName("SaveBtn")
+        save_btn.setCursor(Qt.PointingHandCursor)
+        save_btn.clicked.connect(self.accept)
+        
+        cancel_btn = QPushButton("取消")
+        cancel_btn.setProperty("class", "ModernBtn")
+        cancel_btn.setObjectName("CancelBtn")
+        cancel_btn.setCursor(Qt.PointingHandCursor)
+        cancel_btn.clicked.connect(self.reject)
+        
+        btn_layout.addStretch()
+        btn_layout.addWidget(cancel_btn)
+        btn_layout.addWidget(save_btn)
+        
+        frame_layout.addWidget(title)
+        frame_layout.addSpacing(5)
+        frame_layout.addWidget(desc)
+        frame_layout.addSpacing(15)
+        frame_layout.addWidget(scroll)
+        frame_layout.addWidget(add_btn)
+        frame_layout.addSpacing(25)
+        frame_layout.addLayout(btn_layout)
+        
+        layout.addWidget(frame)
+
+    def add_rule(self, data=None):
+        row = RuleRowWidget(data, self)
+        self.rules_layout.addWidget(row)
+
+    def get_rules(self):
+        rules = []
+        for i in range(self.rules_layout.count()):
+            widget = self.rules_layout.itemAt(i).widget()
+            if widget and isinstance(widget, RuleRowWidget):
+                r = widget.get_data()
+                if r["start"]: 
+                    rules.append(r)
+        return rules
 
 def create_svg_icon_label(icon_filename, size=24, color="#ffffff"):
     lbl = QLabel()
@@ -321,6 +513,29 @@ class EditorWindow(QWidget):
                 return data
         return {"name": "新表情", "hotkey": "", "is_enabled": True, "_folder_path": self.folder_path}
 
+    def load_syntax_rules(self):
+        """核心改进：实现变色规则的独立优先级加载"""
+        # 优先级1：当前表情文件夹下的 config.json
+        if "syntax_rules" in self.config and self.config["syntax_rules"]:
+            logger.debug(f"[{self.config.get('name')}] 使用本地独立的变色规则")
+            return
+
+        # 优先级2：如果本地没有，则尝试从全局 global_settings.json 读取
+        global_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "global_settings.json")
+        if os.path.exists(global_path):
+            try:
+                with open(global_path, 'r', encoding='utf-8') as f:
+                    global_data = json.load(f)
+                    self.config["syntax_rules"] = global_data.get("syntax_rules", [])
+                    logger.debug(f"[{self.config.get('name')}] 未发现独立规则，已载入全局变色规则")
+            except Exception as e:
+                logger.error(f"加载全局变色规则失败: {e}")
+        
+        if "syntax_rules" not in self.config:
+            self.config["syntax_rules"] = []
+
+
+
     def init_ui(self):
         layout = QHBoxLayout(self.root_frame)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -488,6 +703,40 @@ class EditorWindow(QWidget):
         
         g = SettingsGroup()
         
+        # --- [新增] 字体选择行 ---
+        fonts_dir = "./Fonts"
+        available_fonts = ["msyh.ttc"]
+        if os.path.exists(fonts_dir):
+            for f in os.listdir(fonts_dir):
+                if f.lower().endswith(('.ttf', '.ttc', '.otf')):
+                    if f not in available_fonts: available_fonts.append(f)
+        
+        self.font_combo = QComboBox()
+        self.font_combo.addItems(available_fonts)
+        self.font_combo.setCurrentText(self.config.get("font_name", "msyh.ttc"))
+        self.font_combo.currentTextChanged.connect(lambda v: self.update_cfg("font_name", v))
+        # 应用简单的样式使其适配暗色界面
+        self.font_combo.setStyleSheet("background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 5px; border-radius: 4px;")
+        
+        g.layout.addWidget(SettingsRow("文字字体", "需存放于 Fonts 文件夹", self.font_combo))
+
+        # --- [新增] 语法高亮配置行 ---
+        self.syntax_btn = QPushButton("✨ 配置关键字变色规则")
+        self.syntax_btn.setCursor(Qt.PointingHandCursor)
+        self.syntax_btn.setStyleSheet("""
+            QPushButton { 
+                background: rgba(255,255,255,0.05); 
+                border: 1px dashed rgba(255,255,255,0.2); 
+                padding: 8px; 
+                border-radius: 6px;
+                font-weight: bold;
+            }
+            QPushButton:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
+        """)
+        self.syntax_btn.clicked.connect(self.open_syntax_dialog)
+        g.layout.addWidget(SettingsRow("高级染色", "基于前缀或包裹符变色", self.syntax_btn))
+
+        # --- 以下是你原有的色彩设置逻辑 ---
         def rgb_to_hex(rgb):
             if isinstance(rgb, str): return rgb
             if isinstance(rgb, list) and len(rgb) >= 3: return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
@@ -502,41 +751,47 @@ class EditorWindow(QWidget):
         color_w = QWidget()
         cl = QHBoxLayout(color_w)
         cl.setContentsMargins(0,0,0,0)
-        cl.addWidget(QLabel("主体色:"))
+        cl.addWidget(QLabel("主体:"))
         cl.addWidget(tc)
         cl.addSpacing(15)
-        cl.addWidget(QLabel("描边色:"))
+        cl.addWidget(QLabel("描边:"))
         cl.addWidget(sc)
         
         g.layout.addWidget(SettingsRow("字体基础色彩", "可被语法高亮规则覆盖", color_w))
         
+        # --- 以下是你原有的 Slider 逻辑 ---
         def mk_slider_row(title, key, rng, def_val):
-            lbl = QLabel(f"{self.config.get(key, def_val)}")
+            val = self.config.get(key, def_val)
+            lbl = QLabel(str(val))
             sl = QSlider(Qt.Horizontal)
             sl.setRange(*rng)
-            sl.setValue(self.config.get(key, def_val))
+            sl.setValue(val)
             sl.valueChanged.connect(lambda v: [lbl.setText(str(v)), self.update_cfg(key, v)])
             return SliderSettingsRow(title, "", sl, lbl)
             
-        f_lbl = QLabel(f"{self.config.get('font_size', 0)}")
+        f_size = self.config.get('font_size', 0)
+        f_lbl = QLabel("自适应" if f_size == 0 else str(f_size))
         f_sl = QSlider(Qt.Horizontal)
         f_sl.setRange(0, 200)
-        f_sl.setValue(self.config.get('font_size', 0))
+        f_sl.setValue(f_size)
         f_sl.valueChanged.connect(lambda v: [f_lbl.setText("自适应" if v==0 else str(v)), self.update_cfg("font_size", v)])
-        if self.config.get('font_size', 0) == 0: f_lbl.setText("自适应")
         
         g.layout.addWidget(SliderSettingsRow("固定字号 (0为弹性)", "文字大小限制", f_sl, f_lbl))
         g.layout.addWidget(mk_slider_row("描边厚度 (px)", "stroke_width", (0, 20), 3))
         g.layout.addWidget(mk_slider_row("字间距", "letter_spacing", (-10, 50), 0))
         g.layout.addWidget(mk_slider_row("行间距", "line_spacing", (-20, 100), 4))
         
-        rot_lbl = QLabel(f"{self.config.get('text_rotation', 0)}°")
+        rot_val = self.config.get('text_rotation', 0)
+        rot_lbl = QLabel(f"{rot_val}°")
         rot_sl = QSlider(Qt.Horizontal)
         rot_sl.setRange(-180, 180)
-        rot_sl.setValue(self.config.get('text_rotation', 0))
+        rot_sl.setValue(rot_val)
         rot_sl.valueChanged.connect(lambda v: [rot_lbl.setText(f"{v}°"), self.update_cfg("text_rotation", v)])
         g.layout.addWidget(SliderSettingsRow("整体旋转角度", "文字整体倾斜", rot_sl, rot_lbl))
         
+        g.layout.addWidget(mk_slider_row("水平微调 (X轴)", "offset_x", (-300, 300), 0))
+        g.layout.addWidget(mk_slider_row("垂直微调 (Y轴)", "offset_y", (-300, 300), 0))
+
         it_sw = SwitchControl(checked=self.config.get("is_italic", False))
         it_sw.toggled.connect(lambda s: self.update_cfg("is_italic", s))
         
@@ -554,6 +809,15 @@ class EditorWindow(QWidget):
         
         g.layout.addWidget(SettingsRow("附加特效", "斜体计算会有略微偏移", sw_w, is_last=True))
         self.layout_controls.addWidget(g)
+        
+    def open_syntax_dialog(self):
+        """打开高级染色规则对话框"""
+        current_rules = self.config.get("syntax_rules", [])
+        dialog = SyntaxHighlightDialog(current_rules, self)
+        if dialog.exec():
+            new_rules = dialog.get_rules()
+            self.update_cfg("syntax_rules", new_rules)
+            # 这里的 update_cfg 应该会自动调用 self.update_preview() 刷新预览
 
     def _build_group_box(self):
         lbl = QLabel("文本容器背景调试")
@@ -765,17 +1029,25 @@ class EditorWindow(QWidget):
             logger.error(f"预览渲染出错: {e}")
 
     def save_and_close(self):
+        """保存配置，此时会包含 syntax_rules 以便实现独立设置"""
         save_data = self.config.copy()
+        
+        # 清理临时 UI 变量
         if "_folder_path" in save_data: del save_data["_folder_path"]
         if "test_text" in save_data: del save_data["test_text"]
         
+        # 确保保存路径正确
         path = os.path.join(self.folder_path, "config.json")
-        with open(path, 'w', encoding='utf-8') as f:
-            json.dump(save_data, f, indent=4, ensure_ascii=False)
+        try:
+            with open(path, 'w', encoding='utf-8') as f:
+                # 核心改动：不再删除 syntax_rules，将其直接持久化到表情包文件夹
+                json.dump(save_data, f, indent=4, ensure_ascii=False)
             
-        logger.info(f"表情配置 [{self.config.get('name')}] 已成功保存。")
-        self.saved_signal.emit()
-        self.close()
+            logger.info(f"表情配置 [{self.config.get('name')}] 及其变色规则已独立保存。")
+            self.saved_signal.emit()
+            self.close()
+        except Exception as e:
+            QMessageBox.critical(self, "保存失败", f"无法写入配置文件: {e}")
 
     def delete_emote(self):
         reply = QMessageBox.question(self, "确认销毁", "此操作不可逆！\n将连同底图和元件彻底删除该表情，确定吗？", QMessageBox.Yes | QMessageBox.No)

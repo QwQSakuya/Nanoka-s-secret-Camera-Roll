@@ -25,9 +25,9 @@
     "text_align": "center",
     "valign": "middle",
     "offset_x": 0,
-    "offset_y": 0,
+    "offset_y": -14,
     "text_rotation": 0,
-    "letter_spacing": -1,
+    "letter_spacing": -3,
     "line_spacing": -3,
     "show_box": false,
     "box_x": 98,
@@ -67,5 +67,31 @@
         }
     ],
     "max_chars": 0,
-    "base_image": "base.png"
+    "base_image": "base.png",
+    "syntax_rules": [
+        {
+            "type": "enclose",
+            "start": "【",
+            "end": "】",
+            "color": "#aa00ff"
+        },
+        {
+            "type": "enclose",
+            "start": "[",
+            "end": "]",
+            "color": "#aa00ff"
+        },
+        {
+            "type": "prefix",
+            "start": "【伪证】",
+            "end": "",
+            "color": "#ff453a"
+        },
+        {
+            "type": "prefix",
+            "start": "[伪证]",
+            "end": "",
+            "color": "#ff453a"
+        }
+    ]
 }
