@@ -18,17 +18,17 @@
         255
     ],
     "stroke_width": 0,
-    "font_size": 70,
+    "font_size": 73,
     "font_name": "MiHeavy.ttf",
     "is_italic": false,
     "is_underline": false,
     "text_align": "center",
     "valign": "middle",
     "offset_x": 0,
-    "offset_y": -14,
+    "offset_y": -15,
     "text_rotation": 0,
-    "letter_spacing": -3,
-    "line_spacing": -3,
+    "letter_spacing": -1,
+    "line_spacing": 12,
     "show_box": false,
     "box_x": 98,
     "box_y": 435,
@@ -85,13 +85,13 @@
             "type": "prefix",
             "start": "【伪证】",
             "end": "",
-            "color": "#ff453a"
+            "color": "#aa0000"
         },
         {
             "type": "prefix",
             "start": "[伪证]",
             "end": "",
-            "color": "#ff453a"
+            "color": "#aa0000"
         }
     ]
 }

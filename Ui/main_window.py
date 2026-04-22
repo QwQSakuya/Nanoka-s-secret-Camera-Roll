@@ -785,7 +785,22 @@ class MainWindow(QMainWindow):
 
     def setup_system_tray(self):
         self.tray_icon = QSystemTrayIcon(self)
-        self.tray_icon.setIcon(self.style().standardIcon(QStyle.SP_ComputerIcon))
+        
+        # 1. 获取当前 main_window.py 所在的 Ui 文件夹绝对路径
+        CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+        
+        # 2. 获取项目根目录 (向上退一级)
+        PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
+        
+        # 3. 从根目录出发，拼接完整的 icon.ico 路径
+        icon_path = os.path.join(PROJECT_ROOT, "Assets", "Icon", "icon.ico")
+        
+        # 4. 核心修改：移除 self.style().standardIcon(...)，改用您的专属图标
+        self.tray_icon.setIcon(QIcon(icon_path))
+        
+        # (可选) 让主窗口左上角的图标也保持一致
+        self.setWindowIcon(QIcon(icon_path))
+        
         self.tray_icon.setToolTip("Sketchbook - 后台运行中")
         
         tray_menu = QMenu()
