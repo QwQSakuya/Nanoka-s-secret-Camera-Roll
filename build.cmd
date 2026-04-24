@@ -1,1 +1,1 @@
-python -m PyInstaller -F -w -i icon.ico main.py
+python -m PyInstaller -F -w -i "Assets\Icon\icon.ico" main.py

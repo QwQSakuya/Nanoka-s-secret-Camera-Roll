@@ -227,6 +227,10 @@ class ChatBoxController(QObject):
             self._clear_clipboard()
             
             print(f"[{time.strftime('%H:%M:%S')}] [INFO] 成功发送 {emote_name}")
+
+            for key in ['alt', 'ctrl', 'shift', 'win', 'enter']:
+                keyboard.release(key)
+            time.sleep(0.01)
             
         except Exception as e:
             print(f"\n[{time.strftime('%H:%M:%S')}] [ERROR] 致命异常: {e}")

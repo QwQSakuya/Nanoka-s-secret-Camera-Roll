@@ -66,7 +66,27 @@ MAC_GLASS_STYLE = """
     QPushButton#DelBtn:hover { background-color: rgba(255, 69, 58, 0.15); color: #ff453a; }
 """
 
-# ================= 绝对安全的 UI 日志拦截器 =================
+import os
+import sys
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QMenu, QSystemTrayIcon
+
+def get_external_resource_path(relative_path):
+    """
+    获取外部资源的绝对路径。
+    自动适应开发环境 (运行 .py) 和 生产环境 (运行打包后的 .exe)
+    """
+    if getattr(sys, 'frozen', False):
+        # 生产环境：运行打包后的 .exe
+        # sys.executable 获取的是 main.exe 的完整路径，我们取它的所在目录
+        base_path = os.path.dirname(sys.executable)
+    else:
+        # 开发环境：获取当前 main_window.py 所在的 Ui 文件夹，再向上退一级到项目根目录
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        base_path = os.path.dirname(current_dir)
+        
+    return os.path.join(base_path, relative_path)
+
 class SafeUIHandler(logging.Handler):
     """接收正规 logging 发出的信号"""
     def __init__(self, ui_signal):
@@ -786,19 +806,11 @@ class MainWindow(QMainWindow):
     def setup_system_tray(self):
         self.tray_icon = QSystemTrayIcon(self)
         
-        # 1. 获取当前 main_window.py 所在的 Ui 文件夹绝对路径
-        CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+        # 使用新的外部路径读取函数
+        icon_path = get_external_resource_path(os.path.join("Assets", "Icon", "icon.ico"))
         
-        # 2. 获取项目根目录 (向上退一级)
-        PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
-        
-        # 3. 从根目录出发，拼接完整的 icon.ico 路径
-        icon_path = os.path.join(PROJECT_ROOT, "Assets", "Icon", "icon.ico")
-        
-        # 4. 核心修改：移除 self.style().standardIcon(...)，改用您的专属图标
+        # 设置图标
         self.tray_icon.setIcon(QIcon(icon_path))
-        
-        # (可选) 让主窗口左上角的图标也保持一致
         self.setWindowIcon(QIcon(icon_path))
         
         self.tray_icon.setToolTip("Sketchbook - 后台运行中")
@@ -813,6 +825,7 @@ class MainWindow(QMainWindow):
         self.tray_icon.setContextMenu(tray_menu)
         self.tray_icon.activated.connect(self.on_tray_activated)
         self.tray_icon.show()
+
 
     def on_tray_activated(self, reason):
         if reason == QSystemTrayIcon.DoubleClick:

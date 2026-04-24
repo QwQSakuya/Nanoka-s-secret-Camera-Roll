@@ -1,0 +1,44 @@
+{
+    "name": "草丛中的奈叶香",
+    "hotkey": "alt+q",
+    "is_enabled": true,
+    "base_image": "7F80D2B8779BCA4F43BD612E5C5E01D4.jpg",
+    "show_box": false,
+    "box_w": 300,
+    "stroke_width": 3,
+    "box_h": 83,
+    "box_x": 46,
+    "box_y": 310,
+    "font_size": 69,
+    "font_name": "MiHeavy.ttf",
+    "offset_y": -12,
+    "valign": "middle",
+    "letter_spacing": -7,
+    "offset_x": 4,
+    "syntax_rules": [
+        {
+            "type": "enclose",
+            "start": "【",
+            "end": "】",
+            "color": "#646464"
+        },
+        {
+            "type": "enclose",
+            "start": "[",
+            "end": "]",
+            "color": "#646464"
+        },
+        {
+            "type": "prefix",
+            "start": "【伪证】",
+            "end": "",
+            "color": "#ff453a"
+        },
+        {
+            "type": "prefix",
+            "start": "[伪证]",
+            "end": "",
+            "color": "#ff453a"
+        }
+    ]
+}

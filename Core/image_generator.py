@@ -175,14 +175,16 @@ class ImageGenerator:
         # 【修改一：仅计算内联图片尺寸，预先挤压文字的最大允许宽度】
         # ====================================================
         orig_box_x = box_x
+        orig_box_y = box_y
         orig_box_w = box_w
+        orig_box_h = box_h
         inline_img_data = config.get("inline_image")
         inline_img_resized = None
         target_w = 0
         spacing = 15 # 图文间距
         
         if inline_img_data:
-            try:
+            try:    
                 if inline_img_data.mode != 'RGBA':
                     inline_img_data = inline_img_data.convert('RGBA')
                 
