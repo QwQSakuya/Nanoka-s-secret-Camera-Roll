@@ -1,0 +1,47 @@
+{
+    "name": "nnk巡视底盘",
+    "hotkey": "alt+p",
+    "is_enabled": true,
+    "base_image": "c68484696968d1756cf0ad1b4810c037.png",
+    "box_x": 100,
+    "valign": "middle",
+    "font_name": "MiHeavy.ttf",
+    "text_rotation": 0,
+    "show_box": false,
+    "box_w": 875,
+    "box_h": 197,
+    "box_y": 22,
+    "stroke_width": 0,
+    "text_color": "#000000",
+    "font_size": 96,
+    "offset_x": -42,
+    "offset_y": -27,
+    "line_spacing": 28,
+    "syntax_rules": [
+        {
+            "type": "enclose",
+            "start": "【",
+            "end": "】",
+            "color": "#8b8b8b"
+        },
+        {
+            "type": "enclose",
+            "start": "[",
+            "end": "]",
+            "color": "#8b8b8b"
+        },
+        {
+            "type": "prefix",
+            "start": "【伪证】",
+            "end": "",
+            "color": "#81221d"
+        },
+        {
+            "type": "prefix",
+            "start": "[伪证]",
+            "end": "",
+            "color": "#81221d"
+        }
+    ],
+    "text_align": "center"
+}
