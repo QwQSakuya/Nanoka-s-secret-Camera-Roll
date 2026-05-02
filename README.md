@@ -1,5 +1,6 @@
 
 # Nanoka's secret Camera Roll
+[English](README.md) | [简体中文](README_zh.md)
 A tool that generates generates images base on your chatbox
 
 the project is inspired by and based on :
