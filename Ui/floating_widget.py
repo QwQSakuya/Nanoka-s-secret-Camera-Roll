@@ -4,19 +4,15 @@ from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QPoint, QTimer
 from PySide6.QtGui import QPixmap, QFont, QPainter, QColor, QPainterPath, QMouseEvent, QPen
 
 class FloatingHUD(QWidget):
-    """
-    常驻桌面悬浮指示器 (智能药丸模式) - MyDockFinder 风格重制版
-    支持透明度调节、鼠标穿透开关、以及智能悬停伸缩显示模式 (已添加平滑动画)
-    """
+    """桌面悬浮指示器 — 显示当前装备的表情，支持悬停展开/拖拽移动/鼠标穿透/透明动画"""
     def __init__(self, parent=None):
         super().__init__(parent)
         
         self.cfg = {}
         self.is_hover_mode = False
         self.base_opacity = 1.0
-        self.custom_pos = False # 记录用户是否自定义拖拽了位置
+        self.custom_pos = False
         
-        # 去除 fixedSize，让窗口尺寸能够根据内容物（图片显示/隐藏）自动伸缩
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | 
                             Qt.Tool | Qt.WindowDoesNotAcceptFocus)
         self.setAttribute(Qt.WA_TranslucentBackground)
@@ -24,18 +20,16 @@ class FloatingHUD(QWidget):
         self.dragPos = QPoint()
         
         self.main_layout = QVBoxLayout(self)
-        # 调整边距以贴合 MyDockFinder 风格面板的比例
         self.main_layout.setContentsMargins(16, 16, 16, 16)
         self.main_layout.setSpacing(10)
         
         self.icon_label = QLabel(self)
         self.icon_label.setAlignment(Qt.AlignCenter)
         
-        # 调整字体样式，使其更柔和现代
         self.name_label = QLabel("已就绪", self)
         self.name_label.setAlignment(Qt.AlignCenter)
         self.name_label.setFont(QFont("-apple-system", 11, QFont.Medium))
-        self.name_label.setStyleSheet("color: rgba(255, 255, 255, 0.9);") # 使用 90% 透明度的白色，避免过于刺眼
+        self.name_label.setStyleSheet("color: rgba(255, 255, 255, 0.9);")
         
         self.main_layout.addWidget(self.icon_label)
         self.main_layout.addWidget(self.name_label)
@@ -43,21 +37,16 @@ class FloatingHUD(QWidget):
         self.anim = QPropertyAnimation(self, b"windowOpacity")
         self.anim.setDuration(250)
         
-        # --- 新增：悬停时的透明度过渡动画 ---
         self.hover_opacity_anim = QPropertyAnimation(self, b"windowOpacity")
         self.hover_opacity_anim.setDuration(200)
         self.hover_opacity_anim.setEasingCurve(QEasingCurve.OutCubic)
         
-        # --- 新增：图片展开/收起的平滑过渡动画 ---
         self.expand_anim = QPropertyAnimation(self.icon_label, b"maximumHeight")
         self.expand_anim.setDuration(300)
-        self.expand_anim.setEasingCurve(QEasingCurve.OutQuart) # 苹果风弹性缓动
+        self.expand_anim.setEasingCurve(QEasingCurve.OutQuart)
         self.expand_anim.valueChanged.connect(self._sync_window_size)
-
-        # 新加这一行：永久绑定动画结束事件
         self.expand_anim.finished.connect(self._on_anim_finished)
         
-        # 悬停模式下，高亮 2 秒后自动收起图片的定时器
         self.collapse_timer = QTimer(self)
         self.collapse_timer.timeout.connect(self.collapse_preview)
         
@@ -107,7 +96,6 @@ class FloatingHUD(QWidget):
         """潜伏状态：使用动画收起图片，只保留文字药丸"""
         self.collapse_timer.stop()
         if self.is_hover_mode:
-            # 直接播放收起动画，清理掉 disconnect 代码
             self.expand_anim.stop()
             self.expand_anim.setStartValue(self.icon_label.height())
             self.expand_anim.setEndValue(0)
@@ -117,7 +105,6 @@ class FloatingHUD(QWidget):
 
     def _on_anim_finished(self):
         """动画结束时的统一处理回调"""
-        # 只有当高度真的缩小到0时，才隐藏控件节约性能
         if self.icon_label.maximumHeight() == 0:
             self.icon_label.hide()
         self._sync_window_size()
@@ -126,16 +113,15 @@ class FloatingHUD(QWidget):
     def expand_preview(self):
         """激活状态：使用动画平滑展开图片"""
         self.icon_label.show()
-        # 直接播放展开动画，清理掉 disconnect 代码
         self.expand_anim.stop()
         self.expand_anim.setStartValue(self.icon_label.height())
-        self.expand_anim.setEndValue(60) # 配合下方 original scaled(80, 60) 的高度
+        self.expand_anim.setEndValue(60)
         self.expand_anim.start()
 
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.LeftButton:
             self.dragPos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
-            self.custom_pos = True # 一旦手动拖拽，解除右下角自动吸附
+            self.custom_pos = True
             event.accept()
 
     def mouseMoveEvent(self, event: QMouseEvent):
@@ -167,21 +153,17 @@ class FloatingHUD(QWidget):
         super().leaveEvent(event)
 
     def paintEvent(self, event):
-        """完全重写绘制逻辑，模拟 MyDockFinder 的深色质感面板"""
+        """绘制深色质感面板"""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         
-        # 留出 1px 的边缘空间用于绘制边框，防止边框被裁剪
         rect = self.rect().adjusted(1, 1, -1, -1)
         path = QPainterPath()
-        # MyDockFinder 风格的圆角通常在 10-12 左右
         path.addRoundedRect(rect, 12, 12) 
         
-        # 1. 绘制深色半透明背景 (接近截图中的底色)
         painter.fillPath(path, QColor(36, 36, 36, 230))
         
-        # 2. 绘制细腻的浅色描边 (模拟 macOS 窗口的 1px 亮色边缘高光)
-        pen = QPen(QColor(255, 255, 255, 25)) # 约 10% 的纯白
+        pen = QPen(QColor(255, 255, 255, 25))
         pen.setWidth(1)
         painter.setPen(pen)
         painter.drawPath(path)
@@ -190,19 +172,20 @@ class FloatingHUD(QWidget):
         if not self.cfg.get("show_hud", True):
             self.hide()
             return
-            
-        self.name_label.setText(emote_name[:6] + ("..." if len(emote_name)>6 else ""))
+
+        if not isinstance(emote_name, str):
+            emote_name = str(emote_name) if emote_name is not None else "未知"
+
+        self.name_label.setText(emote_name[:6] + ("..." if len(emote_name) > 6 else ""))
         if img_path and os.path.exists(img_path):
             pixmap = QPixmap(img_path).scaled(80, 60, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.icon_label.setPixmap(pixmap)
         else:
             self.icon_label.setText("🎨")
             self.icon_label.setFont(QFont("-apple-system", 32))
-            # 配合深色面板，稍微降低空图标的亮度
             self.icon_label.setStyleSheet("color: rgba(255, 255, 255, 0.5);")
             
         self.show()
-        # 装填表情时，强制展开图片让用户看清
         self.expand_preview()
         
         self.anim.stop()
@@ -211,7 +194,7 @@ class FloatingHUD(QWidget):
         self.anim.start()
         
         if self.is_hover_mode:
-            self.collapse_timer.start(2000) # 2秒后自动收起
+            self.collapse_timer.start(2000)
 
     def fade_out(self):
         self.collapse_timer.stop()

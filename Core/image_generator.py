@@ -4,116 +4,133 @@ from PIL import Image, ImageDraw, ImageFont
 from Core.logger import logger
 
 class ImageGenerator:
-    """
-    图像合成生成器 (完整旗舰版)
-    已优化：完美支持十六进制颜色字符串与 RGB 列表混合输入
-    已优化：保留全部底层旋转、图层嵌套、物理级防溢出引擎
-    已优化：支持内联图片挤压排版与高级正则表达式变色引擎
-    """
+    """图像合成生成器 — 支持多图层、文字排版、语法高亮染色、内联图片"""
+
     def __init__(self, fonts_dir="./Fonts"):
         self.fonts_dir = fonts_dir
-        self.default_font_name = "msyh.ttc" 
+        self.default_font_name = "msyh.ttc"
 
     def _parse_color(self, color):
-        """核心改进：将 [R,G,B] 或 "#hex" 统一转换为 PIL 支持的元组"""
+        """将 [R,G,B] 或 "#hex" 统一转换为 PIL 支持的元组"""
         if isinstance(color, str) and color.startswith("#"):
             h = color.lstrip('#')
-            # 处理 #FFF 和 #FFFFFF 两种情况
             if len(h) == 3:
-                h = ''.join([c*2 for c in h])
-            # 处理带透明度 #RRGGBBAA
+                h = ''.join([c * 2 for c in h])
             if len(h) == 8:
-                return tuple(int(h[i:i+2], 16) for i in (0, 2, 4, 6))
-            return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+                return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4, 6))
+            return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
         if isinstance(color, list):
             return tuple(color)
         return color
 
     def _get_line_char_colors(self, text, default_color, rules, current_prefix_color=None):
-        """
-        计算一行文字中每个字符的颜色数组，支持跨行的前缀状态记忆。
-        已修复：正则表达式转义问题、规则优先级冲突、空规则校验。
-        """
-        import re
-        from Core.logger import logger # 确保引入日志模块
-        
-        # 确保 rules 始终是一个列表，防止 NoneType 导致 rules_count 为 0
         if rules is None:
             rules = []
-            
+
         base_color = self._parse_color(default_color)
-        
-        # 1. 跨行记忆状态初始化
+
         starting_color = current_prefix_color if current_prefix_color else base_color
         char_colors = [starting_color] * len(text)
-        
-        # 打印详细初始状态，帮助定位配置丢失问题
+
         rules_count = len(rules)
-        logger.debug(f"[变色渲染] 处理文本: '{text}' | 初始状态色: {starting_color} | 规则总数: {rules_count}")
-        
+        logger.debug(
+            f"[变色渲染] 文本: '{text}' | 初始色: {starting_color} | 规则数: {rules_count}"
+        )
+
         if rules_count == 0:
-            # 如果这里是 0，说明调用该函数的地方传递的 rules 参数为空
             return char_colors, current_prefix_color
 
         if not text:
             return char_colors, current_prefix_color
 
-        # 2. 染色遮罩
         colored_mask = [False] * len(text)
         new_prefix_color = current_prefix_color
 
-        # 3. 优先级排序
-        # 按照类型排序：先处理 prefix (精确前缀)，再处理 enclose (泛化包裹)
         sorted_rules = sorted(rules, key=lambda x: x.get("type") == "enclose")
 
         for rule in sorted_rules:
             r_type = rule.get("type")
             start_tag = rule.get("start", "")
             end_tag = rule.get("end", "")
-            
+
             if not start_tag:
                 continue
-                
+
             try:
-                # 尝试解析颜色，如果失败则跳过
                 raw_color = rule.get("color", "#ffffff")
                 rule_color = self._parse_color(raw_color)
-            except Exception as e:
-                logger.error(f"[变色渲染] 颜色解析失败: {raw_color} - {e}")
+            except Exception:
+                logger.exception(f"[变色渲染] 颜色解析失败: {rule.get('color', '?')}")
                 continue
 
-            # 处理包裹模式 (e.g. [test] or 【内容】)
             if r_type == "enclose" and end_tag:
-                # re.escape 是关键，它能将 '[' 转义为 '\['，避免正则语法冲突
                 safe_start = re.escape(start_tag)
                 safe_end = re.escape(end_tag)
                 pattern = f"{safe_start}.*?{safe_end}"
-                
+
                 matches = list(re.finditer(pattern, text))
                 if matches:
-                    logger.debug(f"[变色渲染] 匹配成功: '{start_tag}...{end_tag}' -> 命中 {len(matches)} 处")
-                
+                    logger.debug(
+                        f"[变色渲染] 匹配: '{start_tag}...{end_tag}' -> 命中 {len(matches)} 处"
+                    )
+
                 for m in matches:
                     s_idx, e_idx = m.start(), m.end()
                     for k in range(s_idx, e_idx):
                         if not colored_mask[k]:
                             char_colors[k] = rule_color
                             colored_mask[k] = True
-                    logger.debug(f"  └─ 染色成功: 索引[{s_idx}:{e_idx}] -> 颜色: {rule_color}")
 
-            # 处理前缀模式 (e.g. [伪证] 之后全部变色)
             elif r_type == "prefix":
                 pos = text.find(start_tag)
                 if pos != -1:
-                    logger.debug(f"[变色渲染] 命中 Prefix 规则 '{start_tag}': 起始位置 {pos}")
+                    logger.debug(f"[变色渲染] 命中 Prefix: '{start_tag}' 位置 {pos}")
                     for k in range(pos, len(text)):
                         if not colored_mask[k]:
                             char_colors[k] = rule_color
                             colored_mask[k] = True
                     new_prefix_color = rule_color
-                    logger.debug(f"  └─ 状态记忆更新: 下一行将继承颜色 {new_prefix_color}")
-        
+
         return char_colors, new_prefix_color
+
+    def _find_protected_enclose_spans(self, paragraph, syntax_rules, threshold):
+        """预扫描段落中的 enclose 包裹段，返回需要保护（不换行切断）的区间列表。
+        仅当包裹段内文字（不含括号）字数 ≤ threshold 时才保护。
+        返回 [(start, end), ...] 区间列表，区间已合并重叠部分。"""
+        if not syntax_rules or threshold <= 0:
+            return []
+
+        spans = []
+        for rule in syntax_rules:
+            if rule.get("type") != "enclose":
+                continue
+            start_tag = rule.get("start", "")
+            end_tag = rule.get("end", "")
+            if not start_tag or not end_tag:
+                continue
+
+            safe_start = re.escape(start_tag)
+            safe_end = re.escape(end_tag)
+            pattern = f"{safe_start}.*?{safe_end}"
+
+            for m in re.finditer(pattern, paragraph):
+                content = m.group()[len(start_tag):-len(end_tag)] if end_tag else m.group()[len(start_tag):]
+                if len(content) <= threshold:
+                    spans.append((m.start(), m.end()))
+
+        if not spans:
+            return []
+
+        spans.sort(key=lambda x: x[0])
+        merged = [spans[0]]
+        for s, e in spans[1:]:
+            last_s, last_e = merged[-1]
+            if s < last_e:
+                merged[-1] = (last_s, max(last_e, e))
+            else:
+                merged.append((s, e))
+        return merged
+
     def _get_font(self, font_name: str, font_size: int) -> ImageFont.FreeTypeFont:
         """尝试获取字体"""
         if not font_name:
@@ -136,7 +153,6 @@ class ImageGenerator:
             
         config = config or {}
 
-        # 1. 基础排版参数 (全面接入解析器)
         text_color = self._parse_color(config.get("text_color", [255, 255, 255]))
         stroke_color = self._parse_color(config.get("stroke_color", [0, 0, 0]))
         underline_color = self._parse_color(config.get("underline_color", config.get("text_color", [255, 255, 255])))
@@ -145,16 +161,13 @@ class ImageGenerator:
         align = config.get("text_align", "center")
         valign = config.get("valign", "bottom")
         
-        # 间距与样式参数
         letter_spacing = config.get("letter_spacing", 0)  
         line_spacing = config.get("line_spacing", 4)      
         is_italic = config.get("is_italic", False)
         is_underline = config.get("is_underline", False)
         text_rotation = config.get("text_rotation", 0)
 
-        # 2. 画布与底图参数
         orig_w, orig_h = base_image.size
-        # 如果不设置 canvas_w/h，默认画布大小等于原始底图大小
         canvas_w = config.get("canvas_w", 0) or orig_w
         canvas_h = config.get("canvas_h", 0) or orig_h
         
@@ -164,16 +177,14 @@ class ImageGenerator:
         base_h = config.get("base_h", 0) or orig_h
         base_rotation = config.get("base_rotation", 0)
 
-        # 文字外框坐标与宽高 (相对于主画布)
         box_x, box_y = config.get("box_x", 0), config.get("box_y", 0)
         box_w = config.get("box_w", 0) or canvas_w
         box_h = config.get("box_h", 0) or canvas_h
         max_chars = config.get("max_chars", 0)
+        auto_wrap_threshold = config.get("auto_wrap_threshold", 6)
+        syntax_rules = config.get("syntax_rules", [])
         offset_x, offset_y = config.get("offset_x", 0), config.get("offset_y", 0)
         
-        # ====================================================
-        # 【修改一：仅计算内联图片尺寸，预先挤压文字的最大允许宽度】
-        # ====================================================
         orig_box_x = box_x
         orig_box_y = box_y
         orig_box_w = box_w
@@ -181,7 +192,7 @@ class ImageGenerator:
         inline_img_data = config.get("inline_image")
         inline_img_resized = None
         target_w = 0
-        spacing = 15 # 图文间距
+        spacing = 15
         
         if inline_img_data:
             try:    
@@ -194,24 +205,17 @@ class ImageGenerator:
                 
                 inline_img_resized = inline_img_data.resize((target_w, target_h), Image.LANCZOS)
                 
-                # 这一步很关键：只缩小文字引擎的排版边界，但不修改起始坐标 box_x
                 box_w = box_w - target_w - spacing  
                 
             except Exception as e:
                 logger.error(f"内联图片处理失败: {e}")
-        # ===================================================
-
-        # --- 图层系统建立 ---
-        # 建立完全透明的 RGBA 主画布
         img = Image.new('RGBA', (canvas_w, canvas_h), (0, 0, 0, 0))
         
-        # ====== 绘制底图 (Base Layer) ======
         if base_image.mode != 'RGBA':
             base_image = base_image.convert('RGBA')
         base_resized = base_image.resize((base_w, base_h), Image.LANCZOS)
         
         if base_rotation != 0:
-            # 开启 expand=True 保证旋转后四角不会被切掉，同时做中心点坐标补偿
             base_rotated = base_resized.rotate(-base_rotation, resample=Image.BILINEAR, expand=True)
             rx = int(base_x + base_w / 2 - base_rotated.width / 2)
             ry = int(base_y + base_h / 2 - base_rotated.height / 2)
@@ -296,15 +300,21 @@ class ImageGenerator:
 
             line_datas = [] 
             
-            # 【全新换行逻辑】：逐段落、逐字像素扫描
+            # 逐段落、逐字像素扫描换行
             for paragraph in text.split('\n'):
                 if not paragraph:
                     line_datas.append({"text": "", "width": 0, "height": line_height, "char_widths": []})
                     continue
+                
+                # 预扫描：找出本段落中需要保护不被切断的 enclose 包裹段
+                protected_spans = self._find_protected_enclose_spans(
+                    paragraph, syntax_rules, auto_wrap_threshold
+                )
                     
                 current_line_text = ""
                 current_line_w = 0
                 current_char_widths = []
+                para_pos = 0
                 
                 for char in paragraph:
                     # 物理边界测量 (考虑了中英文宽度差)
@@ -319,7 +329,7 @@ class ImageGenerator:
                     
                     # 判断是否需要换行
                     if max_chars > 0:
-                        # A模式：强制限制单行字数
+                        # A模式：强制限制单行字数 (历史产物，无UI入口)
                         if len(current_line_text) >= max_chars:
                             line_datas.append({
                                 "text": current_line_text, 
@@ -337,19 +347,31 @@ class ImageGenerator:
                     else:
                         # B模式：自动像素级边界换行 (预留 20px 安全边距)
                         if current_line_w + cw + italic_offset > (box_w - 20) and current_line_text:
-                            line_datas.append({
-                                "text": current_line_text, 
-                                "width": current_line_w - letter_spacing, 
-                                "height": line_height,
-                                "char_widths": current_char_widths
-                            })
-                            current_line_text = char
-                            current_line_w = cw + letter_spacing
-                            current_char_widths = [cw]
+                            # 检查当前位置是否在受保护的 enclose 包裹段内
+                            in_protected = any(
+                                start <= para_pos < end for start, end in protected_spans
+                            )
+                            if in_protected:
+                                # 短括号段受保护，不在此处换行，允许溢出
+                                current_line_text += char
+                                current_line_w += cw + letter_spacing
+                                current_char_widths.append(cw)
+                            else:
+                                line_datas.append({
+                                    "text": current_line_text, 
+                                    "width": current_line_w - letter_spacing, 
+                                    "height": line_height,
+                                    "char_widths": current_char_widths
+                                })
+                                current_line_text = char
+                                current_line_w = cw + letter_spacing
+                                current_char_widths = [cw]
                         else:
                             current_line_text += char
                             current_line_w += cw + letter_spacing
                             current_char_widths.append(cw)
+
+                    para_pos += 1
                             
                 # 把段落剩余的文字归入最后一行
                 if current_line_text:
@@ -364,16 +386,14 @@ class ImageGenerator:
             total_h = len(line_datas) * line_height + (len(line_datas) - 1) * line_spacing if line_datas else 0
             max_line_w = max([ld["width"] for ld in line_datas]) + italic_offset if line_datas else 0
 
-            # 【常驻防溢出保底】：当所有排版手段都用尽，文字高度仍然超出边界，才触发整体字号缩小
+            # 防溢出保底：文字超出边界时触发整体字号缩小
             if (max_line_w > box_w - 10 or total_h > box_h - 10) and font_size > 10:
                 font_size -= 2
                 continue
                 
             break # 完美装入，跳出循环
 
-        # ====================================================
-        # 【修改二：排版完成后，将图文作为一个整体进行居中偏移】
-        # ====================================================
+        # 排版完成后，将图文作为一个整体进行居中偏移
         if inline_img_resized:
             # 此时 max_line_w 是引擎算出的实际文字宽度
             # 组合体的总宽度 = 图片宽度 + 间距 + 实际文字宽度
@@ -402,7 +422,7 @@ class ImageGenerator:
             box_x = combo_x + target_w + spacing
             box_w = max_line_w 
 
-        # 【核心修复】：将所有图层(内联图片 + 普通悬浮层) 按照 Z 层级从小到大排序
+        # 将所有图层按 Z 层级从小到大排序
         loaded_overlays.sort(key=lambda x: x.get("z", 2))
 
         # --- 图层绘制阶段 ---
@@ -457,7 +477,7 @@ class ImageGenerator:
             curr_x += offset_x
             temp_x = curr_x
             
-            # ⭐ 获取本行颜色清单，并同步更新跨行染色状态
+            # 获取本行颜色清单，并同步更新跨行染色状态
             line_colors, active_prefix_color = self._get_line_char_colors(
                 ld["text"], text_color, syntax_rules, active_prefix_color
             )

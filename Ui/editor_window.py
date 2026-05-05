@@ -514,7 +514,7 @@ class EditorWindow(QWidget):
         return {"name": "新表情", "hotkey": "", "is_enabled": True, "_folder_path": self.folder_path}
 
     def load_syntax_rules(self):
-        """核心改进：实现变色规则的独立优先级加载"""
+        """Load syntax rules with independent priority."""
         # 优先级1：当前表情文件夹下的 config.json
         if "syntax_rules" in self.config and self.config["syntax_rules"]:
             logger.debug(f"[{self.config.get('name')}] 使用本地独立的变色规则")
@@ -693,7 +693,16 @@ class EditorWindow(QWidget):
         g.layout.addWidget(SettingsRow("测试预览文本", "输入文字查看排版效果", self.content_input))
         g.layout.addWidget(SettingsRow("水平/垂直对齐", "文本在容器内的吸附方向", align_cb))
         g.layout.addWidget(SettingsRow("", "", valign_cb))
-        g.layout.addWidget(SettingsRow("文本容器边界 (Box)", "设定文字允许绘制的区域坐标", coord_widget, is_last=True))
+        g.layout.addWidget(SettingsRow("文本容器边界 (Box)", "设定文字允许绘制的区域坐标", coord_widget, is_last=False))
+
+        # 特殊符号换行保护字数
+        awt_val = self.config.get("auto_wrap_threshold", 6)
+        awt_lbl = QLabel(str(awt_val))
+        awt_sl = QSlider(Qt.Horizontal)
+        awt_sl.setRange(0, 50)
+        awt_sl.setValue(awt_val)
+        awt_sl.valueChanged.connect(lambda v: [awt_lbl.setText(str(v)), self.update_cfg("auto_wrap_threshold", v)])
+        g.layout.addWidget(SliderSettingsRow("特殊符号换行保护字数", "【】/[] 包裹段内文字 ≤ N 字时不切断 (0=禁用)", awt_sl, awt_lbl, is_last=True))
         self.layout_controls.addWidget(g)
 
     def _build_group_text_style(self):
@@ -811,7 +820,7 @@ class EditorWindow(QWidget):
         self.layout_controls.addWidget(g)
         
     def open_syntax_dialog(self):
-        """打开高级染色规则对话框"""
+        """Open the syntax highlight rules dialog."""
         current_rules = self.config.get("syntax_rules", [])
         dialog = SyntaxHighlightDialog(current_rules, self)
         if dialog.exec():
@@ -1029,7 +1038,7 @@ class EditorWindow(QWidget):
             logger.error(f"预览渲染出错: {e}")
 
     def save_and_close(self):
-        """保存配置，此时会包含 syntax_rules 以便实现独立设置"""
+        """Save config including syntax_rules for independent settings."""
         save_data = self.config.copy()
         
         # 清理临时 UI 变量
@@ -1040,7 +1049,6 @@ class EditorWindow(QWidget):
         path = os.path.join(self.folder_path, "config.json")
         try:
             with open(path, 'w', encoding='utf-8') as f:
-                # 核心改动：不再删除 syntax_rules，将其直接持久化到表情包文件夹
                 json.dump(save_data, f, indent=4, ensure_ascii=False)
             
             logger.info(f"表情配置 [{self.config.get('name')}] 及其变色规则已独立保存。")

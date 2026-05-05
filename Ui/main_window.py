@@ -16,14 +16,11 @@ from PySide6.QtCore import Qt, QPoint, QObject, Signal, Slot, Property, QPropert
 from PySide6.QtGui import QFont, QCursor, QMouseEvent, QPixmap, QIcon, QColor, QPainter, QPainterPath, QDesktopServices
 from PySide6.QtSvg import QSvgRenderer
 
-# 导入编辑器和悬浮窗
 from Ui.editor_window import EditorWindow
 from Ui.floating_widget import FloatingHUD
 
-# 引入核心 logger
 from Core.logger import logger
 
-# 目录常量
 DIR_EMOTE_CONFIGS = "./EmoteConfigs"
 DIR_CONFIGS = "./Configs"
 DIR_LOGS = "./Logs"
@@ -33,7 +30,6 @@ DIR_ASSETS_SVG = "./Assets/Svg"
 for directory in [DIR_EMOTE_CONFIGS, DIR_CONFIGS, DIR_LOGS, DIR_FONTS, DIR_ASSETS_SVG]:
     os.makedirs(directory, exist_ok=True)
 
-# 纯粹的黑灰夜间模式极简风格 (无紫调)
 MAC_GLASS_STYLE = """
     QWidget { font-family: "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Microsoft YaHei", sans-serif; color: #e0e0e0; }
     QFrame#RootFrame { background-color: rgba(20, 20, 22, 230); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); }
@@ -66,29 +62,21 @@ MAC_GLASS_STYLE = """
     QPushButton#DelBtn:hover { background-color: rgba(255, 69, 58, 0.15); color: #ff453a; }
 """
 
-import os
-import sys
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QMenu, QSystemTrayIcon
 
 def get_external_resource_path(relative_path):
-    """
-    获取外部资源的绝对路径。
-    自动适应开发环境 (运行 .py) 和 生产环境 (运行打包后的 .exe)
-    """
+    """Get absolute path for external resources (supports both dev and frozen exe)."""
     if getattr(sys, 'frozen', False):
-        # 生产环境：运行打包后的 .exe
-        # sys.executable 获取的是 main.exe 的完整路径，我们取它的所在目录
         base_path = os.path.dirname(sys.executable)
     else:
-        # 开发环境：获取当前 main_window.py 所在的 Ui 文件夹，再向上退一级到项目根目录
         current_dir = os.path.dirname(os.path.abspath(__file__))
         base_path = os.path.dirname(current_dir)
         
     return os.path.join(base_path, relative_path)
 
 class SafeUIHandler(logging.Handler):
-    """接收正规 logging 发出的信号"""
+    """Thread-safe logging handler that bridges logging to UI signals."""
     def __init__(self, ui_signal):
         super().__init__()
         self.ui_signal = ui_signal
@@ -101,8 +89,8 @@ class SafeUIHandler(logging.Handler):
         except Exception:
             pass
 
-# 💡 全新底层强力劫持器：用于吸收所有漏网的 print() 输出
 class StreamToSignal(QObject):
+    """Captures stray print() output and emits them as UI log signals."""
     new_log = Signal(str, str)
     
     def __init__(self, default_level="INFO"):
@@ -114,7 +102,6 @@ class StreamToSignal(QObject):
         if not text:
             return
             
-        # 智能匹配并清洗旧版代码带有手动时间戳的 print (如 "[18:31:49] [INFO] xxx")
         match_full = re.match(r'^\[\d{2}:\d{2}:\d{2}\]\s*\[(.*?)\]\s*(.*)$', text)
         if match_full:
             self.new_log.emit(match_full.group(1).upper(), match_full.group(2))
@@ -127,7 +114,6 @@ class StreamToSignal(QObject):
                 
     def flush(self):
         pass
-# ==========================================================
 
 class SwitchControl(QWidget):
     toggled = Signal(bool)
@@ -654,7 +640,6 @@ class MainWindow(QMainWindow):
         
         self.hud = FloatingHUD()
         
-        
         self.setWindowTitle("Nanoka's Camera Roll")
         self.resize(1000, 720)
         self.setMinimumSize(850, 550)
@@ -692,7 +677,7 @@ class MainWindow(QMainWindow):
             icon = QIcon()
             icon_path = os.path.join(DIR_ASSETS_SVG, icon_filename)
             if not os.path.exists(icon_path):
-                logger.warning(f"找不到 SVG 图标: {icon_path}")
+                logger.warning(f"SVG icon not found: {icon_path}")
                 return icon
                 
             try:
@@ -723,7 +708,7 @@ class MainWindow(QMainWindow):
                 icon.addPixmap(active_pm, QIcon.Active, QIcon.On)
                 
             except Exception as e:
-                logger.error(f"[UI] SVG QSvgRenderer 渲染失败: {e}，回退使用原文件！")
+                logger.error(f"[UI] SVG render failed: {e}, falling back to raw file")
                 icon.addFile(icon_path)
                 
             return icon
@@ -777,18 +762,13 @@ class MainWindow(QMainWindow):
         
         self.setup_system_tray()
         
-        # =================================================================
-        # 💡 完美修复日志系统：多重强力拦截 (拦截 Logger + 拦截所有 print)
-        # =================================================================
         self.ui_log_signal.connect(self.append_ui_log)
         
-        # 1. 拦截规范 Logger 系统的输出
         self.safe_ui_handler = SafeUIHandler(self.ui_log_signal)
         self.safe_ui_handler.setLevel(logging.DEBUG)
         logging.getLogger().addHandler(self.safe_ui_handler)
         logging.getLogger("Sketchbook").addHandler(self.safe_ui_handler)
         
-        # 2. 拦截并格式化散落在各个旧版模块里的原生 print() 输出！
         self.stdout_redirector = StreamToSignal("INFO")
         self.stdout_redirector.new_log.connect(self.append_ui_log)
         sys.stdout = self.stdout_redirector
@@ -796,7 +776,6 @@ class MainWindow(QMainWindow):
         self.stderr_redirector = StreamToSignal("ERROR")
         self.stderr_redirector.new_log.connect(self.append_ui_log)
         sys.stderr = self.stderr_redirector
-        # =================================================================
         
         if self.config_mgr:
             self.hud.apply_config(self.config_mgr.global_settings)
@@ -806,10 +785,8 @@ class MainWindow(QMainWindow):
     def setup_system_tray(self):
         self.tray_icon = QSystemTrayIcon(self)
         
-        # 使用新的外部路径读取函数
         icon_path = get_external_resource_path(os.path.join("Assets", "Icon", "icon.ico"))
         
-        # 设置图标
         self.tray_icon.setIcon(QIcon(icon_path))
         self.setWindowIcon(QIcon(icon_path))
         
@@ -868,7 +845,7 @@ class MainWindow(QMainWindow):
             event.accept()
 
     def trigger_hud(self, emote_name, img_path):
-        logger.debug(f"执行 HUD 弹窗指令: {emote_name}")
+        logger.debug(f"HUD trigger: {emote_name}")
         self.hud.show_emote(emote_name, img_path)
 
     def create_home_page(self):
@@ -912,16 +889,11 @@ class MainWindow(QMainWindow):
             lambda: QDesktopServices.openUrl(QUrl("https://github.com/MarkCup-Official/Anan-s-Sketchbook-Chat-Box"))
         )
         github_link_layout.addWidget(github_btn)
-        
-        # 使用你定义的 layout（主垂直布局）将弹簧和横向布局加进去
-
 
         self.start_btn = QPushButton("载入后台监听系统")
         self.start_btn.setProperty("class", "PrimaryBtn")
         self.start_btn.setFixedSize(200, 44)
         self.start_btn.setCursor(QCursor(Qt.PointingHandCursor))
-        
-
 
         def toggle_system():
             if not self.controller or not self.config_mgr: return
@@ -1081,7 +1053,7 @@ class MainWindow(QMainWindow):
 
     @Slot(str, str)
     def append_ui_log(self, level, msg):
-        """将底层传来的日志信号渲染进 UI 中"""
+        """Append a log message from backend to the UI."""
         color_map = {
             "DEBUG": "#888888",
             "INFO": "#e0e0e0",
@@ -1091,18 +1063,14 @@ class MainWindow(QMainWindow):
         }
         color = color_map.get(level, "#ffffff")
         
-        # 智能匹配成功关键字变绿
         if "成功" in msg or "完毕" in msg or "就绪" in msg:
             color = "#32d74b"
             
-        # 防止 HTML 标签被错误转义吃掉
         safe_msg = html.escape(msg)
         html_msg = f"<span style='color:{color};'>{safe_msg}</span>"
         
-        # 在多线程调用下安全追加日志
         if hasattr(self, 'log_box'):
             self.log_box.appendHtml(html_msg)
-            # 自动滚动到底部
             scrollbar = self.log_box.verticalScrollBar()
             scrollbar.setValue(scrollbar.maximum())
 
@@ -1125,7 +1093,6 @@ class MainWindow(QMainWindow):
         
         return page
 
-    # ================= 全新偏好设置页面 =================
     def create_settings_page(self):
         page = QWidget()
         main_scroll = QScrollArea()
@@ -1149,15 +1116,13 @@ class MainWindow(QMainWindow):
             if self.config_mgr:
                 new_cfg = self.config_mgr.global_settings.copy()
                 
-                # 动态安全获取白名单内容
                 proc_list = global_cfg.get("target_processes", ["discord.exe", "wechat.exe", "qq.exe"])
                 if hasattr(self, 'proc_input'):
                     proc_text = self.proc_input.text().strip()
                     if proc_text:
-                        # 兼容中英文逗号，去除空格，并转为小写
                         proc_list = [p.strip().lower() for p in proc_text.replace('，', ',').split(',') if p.strip()]
                     else:
-                        proc_list = [] # 留空代表允许所有软件
+                        proc_list = []
 
                 new_cfg.update({
                     "global_trigger_key": self.hk_input.text().strip(),
@@ -1174,7 +1139,6 @@ class MainWindow(QMainWindow):
                 self.on_data_changed()
                 logger.info("偏好设置已自动热更新！")
 
-        # --------------- [分组 1：核心工作流] ---------------
         lbl1 = QLabel("核心工作流")
         lbl1.setStyleSheet("color: #888888; font-size: 12px; font-weight: bold; margin-left: 5px; background: transparent;")
         layout.addWidget(lbl1)
@@ -1202,7 +1166,6 @@ class MainWindow(QMainWindow):
         group1.layout.addWidget(r3)
         layout.addWidget(group1)
 
-        # --------------- [分组 2：桌面悬浮指示器] ---------------
         lbl2 = QLabel("桌面悬浮指示器 (HUD)")
         lbl2.setStyleSheet("color: #888888; font-size: 12px; font-weight: bold; margin-left: 5px; background: transparent;")
         layout.addWidget(lbl2)
@@ -1237,11 +1200,6 @@ class MainWindow(QMainWindow):
         group2.layout.addWidget(r7)
         layout.addWidget(group2)
 
-        # --------------- [分组 3：进阶与高级] ---------------
-        ##lbl3 = QLabel("语法与高亮")
-        ##lbl3.setStyleSheet("color: #888888; font-size: 12px; font-weight: bold; margin-left: 5px; background: transparent;")
-        ##layout.addWidget(lbl3)
-        
         group3 = SettingsGroup()
         
         edit_syntax_btn = QPushButton("管理规则...")
@@ -1258,20 +1216,12 @@ class MainWindow(QMainWindow):
                 self.on_data_changed()
                 logger.info("高亮规则已保存并即时生效！")
                 
-        ##edit_syntax_btn.clicked.connect(open_syntax_dialog)
-        ##r8 = SettingsRow("配置关键词变色引擎", "定义文字前缀与括弧内的特殊上色渲染逻辑", edit_syntax_btn, is_last=True)
-        
-        ##group3.layout.addWidget(r8)
-        ##layout.addWidget(group3)
-        
-        # --------------- [分组 4：窗口拦截与白名单] ---------------
         lbl4 = QLabel("进程白名单防误触")
         lbl4.setStyleSheet("color: #888888; font-size: 12px; font-weight: bold; margin-left: 5px; background: transparent;")
         layout.addWidget(lbl4)
         
         group4 = SettingsGroup()
         
-        # 读取默认配置并用逗号拼接为字符串展示
         current_procs = global_cfg.get("target_processes", ["discord.exe", "wechat.exe", "qq.exe"])
         proc_str = ", ".join(current_procs)
         
