@@ -55,7 +55,8 @@ def main():
             controller.start_listening(
                 all_emotes, 
                 global_cfg, 
-                window.trigger_hud
+                window.trigger_hud,
+                window._on_quick_search_hotkey
             )
             
             default_name = "待命..."

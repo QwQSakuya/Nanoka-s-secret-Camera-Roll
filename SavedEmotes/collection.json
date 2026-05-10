@@ -1,0 +1,67 @@
+{
+    "version": 1,
+    "folders": {
+        "可爱猫猫": {
+            "display_name": "可爱猫猫",
+            "sort_order": 0
+        },
+        "新建文件夹": {
+            "display_name": "新建文件夹",
+            "sort_order": 1
+        },
+        "新建文件夹_1": {
+            "display_name": "新建文件夹",
+            "sort_order": 2
+        },
+        "a": {
+            "display_name": "a",
+            "sort_order": 3
+        }
+    },
+    "items": [
+        {
+            "id": "生气表情_狗.jpg",
+            "folder": "",
+            "filename": "生气表情_狗.jpg",
+            "display_name": "生气表情_狗",
+            "tags": [
+                {
+                    "name": "默认收藏",
+                    "color": "#66b2ff"
+                },
+                {
+                    "name": "生气",
+                    "color": "#ff6b6b"
+                },
+                {
+                    "name": "狗",
+                    "color": "#6bcb77"
+                }
+            ],
+            "added_at": 1778318001.0,
+            "sort_order": 1
+        },
+        {
+            "id": "猫猫睡觉.png",
+            "folder": "",
+            "filename": "猫猫睡觉.png",
+            "display_name": "猫猫睡觉",
+            "tags": [
+                {
+                    "name": "可爱",
+                    "color": "#ff6b6b"
+                },
+                {
+                    "name": "猫",
+                    "color": "#ffd93d"
+                },
+                {
+                    "name": "睡觉",
+                    "color": "#4d96ff"
+                }
+            ],
+            "added_at": 1778318004.0,
+            "sort_order": 1
+        }
+    ]
+}

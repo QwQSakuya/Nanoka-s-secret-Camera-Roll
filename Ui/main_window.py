@@ -6,20 +6,23 @@ import json
 import logging
 import html
 import re
+import keyboard
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QLabel, 
                                QPushButton, QLineEdit, QGridLayout, QFrame, 
                                QScrollArea, QCheckBox, QSlider, QStackedWidget, 
                                QButtonGroup, QPlainTextEdit, QMainWindow, QMessageBox,
                                QSystemTrayIcon, QMenu, QStyle, QApplication, QDialog, QSizePolicy,
-                               QComboBox, QColorDialog)
-from PySide6.QtCore import Qt, QPoint, QObject, Signal, Slot, Property, QPropertyAnimation, QEasingCurve, QSize, QByteArray,QUrl
-from PySide6.QtGui import QFont, QCursor, QMouseEvent, QPixmap, QIcon, QColor, QPainter, QPainterPath, QDesktopServices
+                               QComboBox, QColorDialog, QToolButton, QLayout)
+from PySide6.QtCore import Qt, QPoint, QObject, Signal, Slot, Property, QPropertyAnimation, QEasingCurve, QSize, QByteArray, QUrl, QMimeData, QEvent, QTimer, QRect
+from PySide6.QtGui import QFont, QCursor, QMouseEvent, QPixmap, QIcon, QColor, QPainter, QPainterPath, QDesktopServices, QImage, QPen, QMovie, QDrag, QLinearGradient
 from PySide6.QtSvg import QSvgRenderer
 
 from Ui.editor_window import EditorWindow
 from Ui.floating_widget import FloatingHUD
 
 from Core.logger import logger
+from Core.saved_emotes_mgr import SavedEmotesManager
+from Core.emote_sender import copy_file_to_clipboard, paste_to_chat, send_emote, IMAGE_EXTS, ALL_EXTS
 
 DIR_EMOTE_CONFIGS = "./EmoteConfigs"
 DIR_CONFIGS = "./Configs"
@@ -60,6 +63,7 @@ MAC_GLASS_STYLE = """
     
     QPushButton#DelBtn { background-color: transparent; color: #888888; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: bold; }
     QPushButton#DelBtn:hover { background-color: rgba(255, 69, 58, 0.15); color: #ff453a; }
+    QToolTip { color: #000000; background-color: rgba(240, 240, 240, 220); border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; padding: 4px 8px; font-size: 12px; }
 """
 
 from PySide6.QtGui import QIcon
@@ -628,6 +632,942 @@ class EmoteCard(QFrame):
         layout.addSpacing(8)
         layout.addLayout(bottom)
 
+
+class SavedEmoteQuickPopup(QDialog):
+    """快捷检索弹窗 —— 有子文件夹时左侧显示文件夹侧栏，右侧显示表情"""
+    emote_selected = Signal(str)
+    folder_clicked = Signal(str)  # 点击侧栏文件夹 → relative_path
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint | Qt.WindowDoesNotAcceptFocus)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_DeleteOnClose, False)
+        self.setAttribute(Qt.WA_ShowWithoutActivating)
+        self.setFixedSize(480, 420)
+        self.setWindowOpacity(0.0)
+        self._current_path = ""
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(6, 6, 6, 6)
+        layout.setSpacing(0)
+
+        # ── 左侧侧栏 ──
+        self._sidebar_frame = QFrame(self)
+        self._sidebar_frame.setObjectName("QuickSidebar")
+        self._sidebar_frame.setFixedWidth(110)
+        self._sidebar_frame.setStyleSheet("")
+        sidebar_layout = QVBoxLayout(self._sidebar_frame)
+        sidebar_layout.setContentsMargins(6, 8, 6, 8)
+        sidebar_layout.setSpacing(4)
+
+        self._sidebar_title = QLabel("📂 文件夹")
+        self._sidebar_title.setFont(QFont("Microsoft YaHei", 9, QFont.Bold))
+        self._sidebar_title.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent;")
+
+        self._sidebar_scroll = QScrollArea()
+        self._sidebar_scroll.setWidgetResizable(True)
+        self._sidebar_scroll.setFrameShape(QFrame.NoFrame)
+        self._sidebar_scroll.setStyleSheet("QScrollArea { background: transparent; } QScrollBar:vertical { width: 3px; background: transparent; } QScrollBar::handle:vertical { background: rgba(255,255,255,0.1); border-radius: 1px; }")
+        self._sidebar_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._sidebar_content = QWidget()
+        self._sidebar_content.setStyleSheet("background: transparent;")
+        self._sidebar_layout = QVBoxLayout(self._sidebar_content)
+        self._sidebar_layout.setContentsMargins(0, 0, 0, 0)
+        self._sidebar_layout.setSpacing(3)
+        self._sidebar_layout.setAlignment(Qt.AlignTop)
+        self._sidebar_scroll.setWidget(self._sidebar_content)
+
+        sidebar_layout.addWidget(self._sidebar_title)
+        sidebar_layout.addWidget(self._sidebar_scroll)
+
+        # ── 右侧主体 ──
+        self._main_frame = QFrame(self)
+        self._main_frame.setObjectName("QuickMain")
+        self._main_frame.setStyleSheet("")
+        main_layout = QVBoxLayout(self._main_frame)
+        main_layout.setContentsMargins(8, 8, 8, 6)
+        main_layout.setSpacing(6)
+
+        self._title_label = QLabel("表情检索")
+        self._title_label.setFont(QFont("Microsoft YaHei", 13, QFont.Bold))
+        self._title_label.setStyleSheet("color: rgba(255, 255, 255, 0.9); background: transparent;")
+
+        self._scroll = QScrollArea()
+        self._scroll.setWidgetResizable(True)
+        self._scroll.setFrameShape(QFrame.NoFrame)
+        self._scroll.setStyleSheet("QScrollArea { background: transparent; } QScrollBar:vertical { width: 4px; background: transparent; } QScrollBar::handle:vertical { background: rgba(255,255,255,0.15); border-radius: 2px; }")
+        self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        self._content = QWidget()
+        self._content.setStyleSheet("background: transparent;")
+        self._content_layout = QVBoxLayout(self._content)
+        self._content_layout.setContentsMargins(0, 0, 0, 0)
+        self._content_layout.setSpacing(6)
+        self._content_layout.setAlignment(Qt.AlignTop)
+        self._scroll.setWidget(self._content)
+
+        self._close_btn = QPushButton("关闭")
+        self._close_btn.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(255,255,255,0.05);
+                color: #888888;
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 6px;
+                padding: 6px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: rgba(255,255,255,0.1);
+                color: #ffffff;
+            }
+        """)
+        self._close_btn.setCursor(Qt.PointingHandCursor)
+        self._close_btn.clicked.connect(self.close)
+
+        main_layout.addWidget(self._title_label)
+        main_layout.addWidget(self._scroll)
+        main_layout.addWidget(self._close_btn)
+
+        layout.addWidget(self._sidebar_frame)
+        layout.addWidget(self._main_frame)
+
+        self._fade_anim = QPropertyAnimation(self, b"windowOpacity")
+        self._fade_anim.setDuration(200)
+        self._fade_anim.setEasingCurve(QEasingCurve.OutCubic)
+
+        self._sidebar_frame.hide()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        rect = self.rect().adjusted(1, 1, -1, -1)
+        path = QPainterPath()
+        path.addRoundedRect(rect, 14, 14)
+        painter.fillPath(path, QColor(28, 28, 32, 240))
+        pen = QPen(QColor(255, 255, 255, 20))
+        pen.setWidth(1)
+        painter.setPen(pen)
+        painter.drawPath(path)
+
+    def set_title(self, text):
+        self._title_label.setText(text)
+
+    def clear_items(self):
+        while self._content_layout.count():
+            item = self._content_layout.takeAt(0)
+            if item.widget():
+                item.widget().setParent(None)
+                item.widget().deleteLater()
+        QApplication.processEvents()
+
+    def set_folders(self, subfolders, current_path):
+        """设置左侧侧栏的子文件夹列表。subfolders: [(name, rel_path), ...]"""
+        while self._sidebar_layout.count():
+            item = self._sidebar_layout.takeAt(0)
+            if item.widget():
+                item.widget().setParent(None)
+                item.widget().deleteLater()
+        QApplication.processEvents()
+
+        self._current_path = current_path
+
+        # 返回上级按钮 (不在根目录时显示)
+        if current_path:
+            back_btn = QPushButton("← 返回上级")
+            back_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: rgba(255,255,255,0.05);
+                    color: rgba(255,255,255,0.55);
+                    border-radius: 6px;
+                    padding: 4px 6px;
+                    font-size: 10px;
+                    text-align: left;
+                    border: none;
+                }
+                QPushButton:hover {
+                    background-color: rgba(255,255,255,0.12);
+                    color: rgba(255,255,255,0.9);
+                }
+            """)
+            back_btn.setCursor(Qt.PointingHandCursor)
+            back_btn.clicked.connect(lambda: self.folder_clicked.emit("__back__"))
+            self._sidebar_layout.addWidget(back_btn)
+
+            separator = QLabel("—")
+            separator.setStyleSheet("color: rgba(255,255,255,0.1); font-size: 9px; background: transparent;")
+            separator.setAlignment(Qt.AlignCenter)
+            self._sidebar_layout.addWidget(separator)
+
+        if not subfolders and not current_path:
+            self._sidebar_frame.hide()
+            return
+
+        self._sidebar_frame.show()
+        for folder_name, rel_path in subfolders:
+            btn = QPushButton(f" {folder_name}")
+            btn.setStyleSheet("""
+                QPushButton {
+                    background-color: rgba(255,255,255,0.03);
+                    color: rgba(255,255,255,0.65);
+                    border-radius: 6px;
+                    padding: 5px 8px;
+                    font-size: 11px;
+                    text-align: left;
+                    border: none;
+                }
+                QPushButton:hover {
+                    background-color: rgba(255,255,255,0.08);
+                    color: rgba(255,255,255,0.95);
+                }
+            """)
+            btn.setCursor(Qt.PointingHandCursor)
+            btn.clicked.connect(lambda checked, p=rel_path: self.folder_clicked.emit(p))
+            self._sidebar_layout.addWidget(btn)
+        self._sidebar_layout.addStretch()
+
+    def _truncate_text(self, text, max_chars=14):
+        if len(text) > max_chars:
+            return text[:max_chars] + "…"
+        return text
+
+    def add_item(self, item_data, file_path, mgr):
+        row = QFrame()
+        row.setObjectName("QuickItem")
+        row.setStyleSheet("")
+        row.setCursor(Qt.PointingHandCursor)
+        row.setFixedHeight(78)
+
+        rl = QHBoxLayout(row)
+        rl.setContentsMargins(10, 8, 10, 8)
+        rl.setSpacing(10)
+
+        thumb = QLabel()
+        thumb.setFixedSize(56, 42)
+        thumb.setAlignment(Qt.AlignCenter)
+        thumb.setStyleSheet("background: transparent; border-radius: 6px;")
+        if file_path and os.path.exists(file_path):
+            ext = os.path.splitext(file_path)[1].lower()
+            if ext in ('.png', '.jpg', '.jpeg', '.gif'):
+                pixmap = QPixmap(file_path).scaled(56, 42, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+                thumb.setPixmap(pixmap)
+            elif ext == '.mp4':
+                thumb.setText("🎬")
+                thumb.setStyleSheet("background-color: rgba(0,0,0,0.3); border-radius: 6px; color: rgba(255,255,255,0.5); font-size: 16px;")
+        else:
+            thumb.setText("❓")
+            thumb.setStyleSheet("background-color: rgba(0,0,0,0.3); border-radius: 6px; color: rgba(255,255,255,0.5); font-size: 16px;")
+
+        info = QVBoxLayout()
+        info.setSpacing(1)
+
+        filename = item_data.get("filename", "") or ""
+        display_name = item_data.get("display_name", "") or os.path.splitext(filename)[0] or "未命名"
+        name_label = QLabel(self._truncate_text(display_name, 14))
+        name_label.setFont(QFont("Microsoft YaHei", 11, QFont.Bold))
+        name_label.setStyleSheet("color: rgba(255, 255, 255, 0.9); background: transparent;")
+
+        tags = item_data.get("tags", [])
+        if tags:
+            tag_text = "  ".join(f"#{self._truncate_text(t, 8)}" for t in tags[:4])
+            if len(tags) > 4:
+                tag_text += f"  +{len(tags) - 4}"
+        else:
+            tag_text = "无标签"
+        tag_label = QLabel(tag_text)
+        tag_label.setStyleSheet("color: rgba(255, 255, 255, 0.4); font-size: 10px; background: transparent;")
+
+        folder = item_data.get("folder", "")
+        if folder:
+            path_text = f"📁 {folder}/"
+        else:
+            path_text = "📁 SavedEmotes/"
+        path_label = QLabel(path_text)
+        path_label.setStyleSheet("color: rgba(255, 255, 255, 0.25); font-size: 9px; background: transparent;")
+
+        info.addWidget(name_label)
+        info.addWidget(tag_label)
+        info.addWidget(path_label)
+
+        rl.addWidget(thumb)
+        rl.addLayout(info)
+        rl.addStretch()
+
+        row.paintEvent = lambda e, r=row: self._paint_item_bg(e, r)
+        row.mousePressEvent = lambda e, fp=file_path: self._on_item_clicked(fp)
+        self._content_layout.addWidget(row)
+
+    def _paint_item_bg(self, event, row):
+        painter = QPainter(row)
+        painter.setRenderHint(QPainter.Antialiasing)
+        hover = row.underMouse()
+        rect = row.rect().adjusted(1, 1, -1, -1)
+        path = QPainterPath()
+        path.addRoundedRect(rect, 8, 8)
+        if hover:
+            painter.fillPath(path, QColor(56, 56, 64, 200))
+        else:
+            painter.fillPath(path, QColor(38, 38, 44, 180))
+
+    def _on_item_clicked(self, file_path):
+        logger.debug(f"[快速搜索弹窗] _on_item_clicked: {file_path}")
+        if send_emote(file_path, clear_after=True):
+            self.emote_selected.emit(file_path)
+            self.close()
+
+    def show_at_cursor(self, item_count=0):
+        self._reposition(item_count)
+        self.setWindowOpacity(0.0)
+        self.show()
+        self._fade_anim.stop()
+        self._fade_anim.finished.disconnect()
+        self._fade_anim.setStartValue(0.0)
+        self._fade_anim.setEndValue(1.0)
+        self._fade_anim.start()
+
+    def _reposition(self, item_count=0):
+        """Just reposition and adjust, no fade."""
+        cursor_pos = QCursor.pos()
+        x = cursor_pos.x() + 15
+        y = cursor_pos.y() - 30
+        screen = QApplication.primaryScreen().availableGeometry()
+        if x + self.width() > screen.right():
+            x = screen.right() - self.width() - 10
+        if y + self.height() > screen.bottom():
+            y = screen.bottom() - self.height() - 10
+        if y < screen.top():
+            y = screen.top() + 10
+        self.move(x, y)
+        if item_count > 0:
+            self._scroll.verticalScrollBar().setValue(0)
+
+    def closeEvent(self, event):
+        self._fade_anim.stop()
+        self._fade_anim.finished.disconnect()
+        event.accept()
+        self.deleteLater()
+
+
+class GridFlowLayout:
+    """轻量网格布局封装."""
+    def __init__(self, container, spacing=14):
+        self._container = container
+        self._spacing = spacing
+        self._layout = QGridLayout(container)
+        self._layout.setContentsMargins(0, 10, 10, 20)
+        self._layout.setSpacing(spacing)
+        self._items = []
+        self._orig_resize = container.resizeEvent
+        container.resizeEvent = self._on_resize
+
+    def _on_resize(self, event):
+        if self._orig_resize:
+            self._orig_resize(event)
+        self._relayout()
+
+    def addWidget(self, w):
+        self._items.append(w)
+        self._relayout()
+
+    def clear_all(self):
+        for w in self._items:
+            w.hide()
+            w.deleteLater()
+        self._items.clear()
+        self._relayout()
+
+    def _relayout(self):
+        while self._layout.count():
+            self._layout.takeAt(0)
+        container_width = self._container.width()
+        if container_width < 100:
+            container_width = 800
+        col_w = SavedEmoteCard.CARD_W + self._spacing
+        cols = max(1, (container_width - 20) // col_w)
+        for i, w in enumerate(self._items):
+            self._layout.addWidget(w, i // cols, i % cols)
+
+
+class SavedEmoteCard(QFrame):
+    CARD_W = 230
+    BASE_H = 278
+
+    def __init__(self, item_data, file_path, index, mgr):
+        super().__init__()
+        self.item_data = item_data
+        self.file_path = file_path
+        self._index = index
+        self._mgr = mgr
+        self.setObjectName("SavedEmoteCard")
+        self._dynamic_h = self.BASE_H
+        self.setFixedSize(self.CARD_W, self._dynamic_h)
+        self.setCursor(Qt.PointingHandCursor)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 10)
+        layout.setSpacing(6)
+
+        ext = os.path.splitext(file_path)[1].lower() if file_path else ""
+
+        self._thumb = QLabel()
+        self._thumb.setFixedSize(206, 130)
+        self._thumb.setAlignment(Qt.AlignCenter)
+        self._thumb.setStyleSheet("background: transparent;")
+        self._gif_movie = None
+
+        if file_path and os.path.exists(file_path):
+            if ext in ('.png', '.jpg', '.jpeg', '.webp', '.bmp', '.tiff'):
+                pix = QPixmap(file_path).scaled(206, 130, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+                self._thumb.setPixmap(pix)
+                self._thumb.setStyleSheet("background-color: transparent; border-radius: 8px;")
+            elif ext == '.gif':
+                self._gif_movie = QMovie(file_path)
+                self._gif_movie.setScaledSize(QSize(206, 130))
+                self._thumb.setMovie(self._gif_movie)
+                self._gif_movie.start()
+            elif ext in ('.mp4', '.webm', '.avi', '.mov'):
+                self._thumb.setText("🎬")
+                self._thumb.setStyleSheet("background-color: rgba(0,0,0,0.3); border-radius: 8px; color: rgba(255,255,255,0.4); font-size: 24px;")
+            elif ext in ('.mp3', '.wav', '.ogg'):
+                self._thumb.setText("🎵")
+                self._thumb.setStyleSheet("background-color: rgba(0,0,0,0.3); border-radius: 8px; color: rgba(255,255,255,0.4); font-size: 24px;")
+        else:
+            self._thumb.setText("?")
+            self._thumb.setStyleSheet("background-color: rgba(0,0,0,0.3); border-radius: 8px; color: #888888; font-size: 24px;")
+
+        display = item_data.get("display_name", "") or os.path.splitext(item_data.get("filename", "?"))[0]
+        self._name_label = QLabel(self._trunc(display, 18))
+        self._name_label.setFont(QFont("Microsoft YaHei", 12, QFont.Bold))
+        self._name_label.setStyleSheet("color: #ffffff; background: transparent;")
+
+        folder = item_data.get("folder", "")
+        self._path_label = QLabel(folder if folder else "SavedEmotes")
+        self._path_label.setStyleSheet("color: #a0a0a0; font-size: 10px; background: transparent;")
+
+        # ── Tag flow area ──
+        self._tag_container = QWidget()
+        self._tag_container.setStyleSheet("background: transparent;")
+        self._tag_flow = FlowTagLayout(h_spacing=4, v_spacing=3)
+        self._tag_container.setLayout(self._tag_flow)
+
+        # ── Bottom buttons ──
+        bottom = QHBoxLayout()
+        bottom.setSpacing(8)
+        rename_btn = QPushButton("重命名")
+        rename_btn.setProperty("class", "SecondaryBtn")
+        rename_btn.setStyleSheet("font-size: 10px; padding: 3px 8px;")
+        rename_btn.setCursor(Qt.PointingHandCursor)
+        rename_btn.clicked.connect(self._rename_card)
+
+        del_btn = QPushButton("删除")
+        del_btn.setObjectName("DelBtn")
+        del_btn.setStyleSheet("font-size: 10px; padding: 3px 8px;")
+        del_btn.setCursor(Qt.PointingHandCursor)
+        del_btn.clicked.connect(self._delete_card)
+
+        bottom.addStretch()
+        bottom.addWidget(rename_btn)
+        bottom.addWidget(del_btn)
+
+        layout.addWidget(self._thumb, alignment=Qt.AlignCenter)
+        layout.addWidget(self._name_label)
+        layout.addWidget(self._path_label)
+        layout.addWidget(self._tag_container)
+        layout.addLayout(bottom)
+
+        self._build_tags()
+
+    def _trunc(self, s, n):
+        return s[:n-1] + "…" if len(s) > n else s
+
+    def _build_tags(self):
+        logger.debug(f"[TagCard] _build_tags START: item={self.item_data.get('id')}, card_w={self.width()}, container_w={self._tag_container.width()}, container_h={self._tag_container.height()}")
+        self._tag_flow.clear()
+        tags = self.item_data.get("tags", [])
+        if not tags:
+            logger.debug(f"[TagCard] No tags → single + button")
+            add_btn = QPushButton("+")
+            add_btn.setFixedSize(26, 22)
+            add_btn.setStyleSheet("color: #a0a0a0; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 14px; font-weight: bold; border: none;")
+            add_btn.setCursor(Qt.PointingHandCursor)
+            add_btn.clicked.connect(self._add_tag)
+            self._tag_flow.addWidget(add_btn)
+            self._adjust_height()
+            return
+
+        if isinstance(tags[0], str):
+            tags = [{"name": t, "color": "#66b2ff"} for t in tags]
+
+        for ti, t in enumerate(tags):
+            tag_name = t["name"] if isinstance(t, dict) else t
+            tag_color = t.get("color", "#66b2ff") if isinstance(t, dict) else "#66b2ff"
+            chip = TagChip(tag_name, tag_color, ti)
+            idx = ti
+            chip.clicked.connect(lambda i=idx: self._edit_single_tag(i))
+            self._tag_flow.addWidget(chip)
+            logger.debug(f"[TagCard] Added TagChip[{ti}]: name={tag_name}, sizeHint={chip.sizeHint().width()}x{chip.sizeHint().height()}")
+
+        add_btn = QPushButton("+")
+        add_btn.setFixedSize(26, 22)
+        add_btn.setStyleSheet("color: #a0a0a0; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 14px; font-weight: bold; border: none;")
+        add_btn.setCursor(Qt.PointingHandCursor)
+        add_btn.clicked.connect(self._add_tag)
+        self._tag_flow.addWidget(add_btn)
+
+        logger.debug(f"[TagCard] _build_tags: {len(self._tag_flow._items)} items total, calling _adjust_height")
+        self._adjust_height()
+
+    def _adjust_height(self):
+        self._tag_flow.invalidate()
+        QApplication.processEvents()
+        cw = self._tag_container.width()
+        if cw < 40:
+            cw = self.CARD_W - 24
+        tag_h = self._tag_flow.heightForWidth(cw)
+        logger.debug(f"[TagCard] _adjust_height: cw={cw}, tag_h={tag_h}, container_geo=({self._tag_container.geometry().x()},{self._tag_container.geometry().y()},{self._tag_container.geometry().width()},{self._tag_container.geometry().height()})")
+        self._dynamic_h = self.BASE_H + max(0, tag_h - 28)
+        self.setFixedSize(self.CARD_W, self._dynamic_h)
+        self._tag_container.setFixedHeight(tag_h)
+        self._tag_flow.invalidate()
+        self._tag_flow.activate()
+        QApplication.processEvents()
+        for i, w in enumerate(self._tag_flow._items):
+            logger.debug(f"[TagCard]   item[{i}]: geo=({w.geometry().x()},{w.geometry().y()},{w.geometry().width()},{w.geometry().height()}), visible={w.isVisible()}, enabled={w.isEnabled()}")
+        self.update()
+        self.updateGeometry()
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        QTimer.singleShot(0, self._adjust_height)
+
+    def showEvent(self, e):
+        super().showEvent(e)
+        logger.debug(f"[TagCard] showEvent: item={self.item_data.get('id')}, card_w={self.width()}, visible={self.isVisible()}")
+        QTimer.singleShot(0, self._adjust_height)
+
+    def _add_tag(self):
+        dlg = GlassNameDialog(self, "", "新建标签")
+        if dlg.exec():
+            name = dlg.result_name
+            if name:
+                tags = self.item_data.get("tags", []).copy()
+                if tags and isinstance(tags[0], str):
+                    tags = [{"name": t, "color": "#66b2ff"} for t in tags]
+                tags.append({"name": name, "color": "#66b2ff"})
+                self.item_data["tags"] = tags
+                self._mgr.set_item_tags(self.item_data.get("id"), tags, folder_key=self.item_data.get("folder"))
+                self._build_tags()
+
+    def _edit_single_tag(self, idx):
+        tags = self.item_data.get("tags", []).copy()
+        if idx >= len(tags):
+            return
+        if isinstance(tags[idx], str):
+            tags = [{"name": t, "color": "#66b2ff"} for t in tags]
+        t = tags[idx]
+        dlg = GlassTagDialog(self, t.get("name", ""), t.get("color", "#66b2ff"))
+        if dlg.exec():
+            if dlg.result_name:
+                t["name"] = dlg.result_name
+            t["color"] = dlg.result_color
+            tags[idx] = t
+            self.item_data["tags"] = tags
+            self._mgr.set_item_tags(self.item_data.get("id"), tags, folder_key=self.item_data.get("folder"))
+            self._build_tags()
+
+    def mousePressEvent(self, e):
+        if e.button() == Qt.LeftButton:
+            self._drag_start = e.position().toPoint()
+        super().mousePressEvent(e)
+
+    def mouseMoveEvent(self, e):
+        if e.buttons() == Qt.LeftButton and hasattr(self, '_drag_start'):
+            delta = (e.position().toPoint() - self._drag_start).manhattanLength()
+            if delta > 5:
+                drag = QDrag(self)
+                mime = QMimeData()
+                mime.setText(self.file_path)
+                pix = self.grab()
+                pix = pix.scaled(int(pix.width() * 0.8), int(pix.height() * 0.8), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                drag.setPixmap(pix)
+                drag.setHotSpot(QPoint(pix.width() // 2, pix.height() // 2))
+                drag.setMimeData(mime)
+                del self._drag_start
+                drag.exec(Qt.MoveAction)
+                return
+        super().mouseMoveEvent(e)
+
+    def _rename_card(self):
+        current = self.item_data.get("display_name", "") or os.path.splitext(self.item_data.get("filename", ""))[0]
+        dlg = GlassNameDialog(self, current, "重命名")
+        if dlg.exec():
+            new_name = dlg.result_name
+            if new_name:
+                self._mgr.rename_item(self.item_data.get("id"), new_name, folder_key=self.item_data.get("folder"))
+                self._mgr._save_collection()
+                self.item_data["display_name"] = new_name
+                self._name_label.setText(self._trunc(new_name, 18))
+
+    def _delete_card(self):
+        from PySide6.QtWidgets import QMessageBox
+        name = self.item_data.get("display_name") or self.item_data.get("filename", "")
+        r = QMessageBox.question(self, "删除", f"确认删除「{name}」？\n文件将被永久删除。")
+        if r == QMessageBox.Yes:
+            self._mgr.delete_item(self.item_data.get("id"), folder_key=self.item_data.get("folder"))
+            w = self
+            while w:
+                if hasattr(w, '_coll_refresh'):
+                    w._coll_refresh()
+                    break
+                w = w.parent()
+
+    def stop_gif(self):
+        if self._gif_movie:
+            self._gif_movie.stop()
+
+    def start_gif(self):
+        if self._gif_movie:
+            self._gif_movie.start()
+
+    def paintEvent(self, e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        rect = self.rect().adjusted(1, 1, -1, -1)
+        path = QPainterPath()
+        path.addRoundedRect(rect, 12, 12)
+        p.setPen(QPen(QColor(255, 255, 255, 10), 1))
+        p.drawPath(path)
+
+
+class FlowTagLayout(QLayout):
+    """Proper QLayout-based flow layout for tags."""
+    def __init__(self, parent=None, h_spacing=4, v_spacing=3):
+        super().__init__(parent)
+        self._hs = h_spacing
+        self._vs = v_spacing
+        self._items = []
+        self.setContentsMargins(0, 0, 0, 0)
+
+    def addWidget(self, w):
+        self._items.append(w)
+        super().addWidget(w)
+
+    def clear(self):
+        while self._items:
+            w = self._items.pop()
+            self.removeWidget(w)
+            w.deleteLater()
+
+    def addItem(self, item):
+        pass
+
+    def count(self):
+        return len(self._items)
+
+    def itemAt(self, idx):
+        return None
+
+    def takeAt(self, idx):
+        return None
+
+    def heightForWidth(self, width):
+        return self._do_layout(QRect(0, 0, width, 0), dry=True)
+
+    def setGeometry(self, rect):
+        super().setGeometry(rect)
+        self._do_layout(rect)
+
+    def sizeHint(self):
+        return QSize(100, 22)
+
+    def minimumSize(self):
+        return QSize(0, 6)
+
+    def hasHeightForWidth(self):
+        return True
+
+    def _do_layout(self, rect, dry=False):
+        x = rect.x()
+        y = rect.y()
+        row_h = 0
+        for w in self._items:
+            hint = w.sizeHint()
+            min_sz = w.minimumSize()
+            max_sz = w.maximumSize()
+            item_w = hint.width()
+            item_h = hint.height()
+            if min_sz.width() > item_w:
+                item_w = min_sz.width()
+            if max_sz.width() < item_w and max_sz.width() > 0:
+                item_w = max_sz.width()
+            if min_sz.height() > item_h:
+                item_h = min_sz.height()
+            if max_sz.height() < item_h and max_sz.height() > 0:
+                item_h = max_sz.height()
+            sw = item_w + self._hs
+            if x + sw > rect.right() and x > rect.x():
+                x = rect.x()
+                y += row_h + self._vs
+                row_h = 0
+            if not dry:
+                w.setGeometry(QRect(x, y, item_w, item_h))
+                if w.parentWidget() and w.parentWidget().isVisible():
+                    w.show()
+            x += sw
+            if item_h > row_h:
+                row_h = item_h
+        total_h = y + row_h - rect.y()
+        return max(total_h, 1)
+
+
+class TagChip(QFrame):
+    clicked = Signal()
+
+    MAX_CHARS = 10
+
+    def __init__(self, name, color, index):
+        super().__init__()
+        self.tag_name = name
+        self.tag_color = color
+        self.setFixedHeight(22)
+        self.setCursor(Qt.PointingHandCursor)
+        self._index = index
+
+        display = name if len(name) <= self.MAX_CHARS else name[:self.MAX_CHARS-1] + "…"
+        lbl = QLabel(f"#{display}")
+        lbl.setStyleSheet("color: #e0e0e0; font-size: 9px; font-weight: bold; background: transparent;")
+        lbl.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        lbl.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(8, 2, 8, 2)
+        layout.setSpacing(0)
+        layout.addWidget(lbl)
+        layout.setSizeConstraint(QLayout.SetFixedSize)
+        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+
+    def mousePressEvent(self, e):
+        if e.button() == Qt.LeftButton:
+            self.clicked.emit()
+        super().mousePressEvent(e)
+
+    def paintEvent(self, e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        rect = self.rect().adjusted(0, 0, 0, 0)
+        path = QPainterPath()
+        path.addRoundedRect(rect, 6, 6)
+
+        c = QColor(self.tag_color)
+        grad = QLinearGradient(rect.topLeft(), rect.bottomLeft())
+        c.setAlpha(5)
+        grad.setColorAt(0.0, c)
+        c.setAlpha(128)
+        grad.setColorAt(1.0, c)
+        p.fillPath(path, grad)
+
+
+class GlassDialogBase(QDialog):
+    """毛玻璃弹窗基类 — 与主界面一致的颜色 + 可拖动."""
+
+    BG_COLOR = QColor(20, 20, 22, 230)
+    BORDER = QColor(255, 255, 255, 26)
+
+    def __init__(self, parent, w=300, h=200):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setModal(True)
+        self.setFixedSize(w, h)
+        self._drag = False
+        self._drag_pos = QPoint()
+
+    def mousePressEvent(self, e):
+        if e.button() == Qt.LeftButton:
+            self._drag = True
+            self._drag_pos = e.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            e.accept()
+
+    def mouseMoveEvent(self, e):
+        if e.buttons() == Qt.LeftButton and self._drag:
+            self.move(e.globalPosition().toPoint() - self._drag_pos)
+            e.accept()
+
+    def mouseReleaseEvent(self, e):
+        self._drag = False
+        super().mouseReleaseEvent(e)
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        rect = self.rect().adjusted(0, 0, 0, 0)
+        path = QPainterPath()
+        path.addRoundedRect(rect, 12, 12)
+        p.fillPath(path, self.BG_COLOR)
+        p.setPen(QPen(self.BORDER, 1))
+        p.drawPath(path)
+
+
+class GlassTagDialog(GlassDialogBase):
+    def __init__(self, parent, tag_name, tag_color):
+        super().__init__(parent, w=320, h=200)
+        self.result_name = tag_name
+        self.result_color = tag_color
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        frame = QFrame(self)
+        frame.setObjectName("GlassDialog")
+        fl = QVBoxLayout(frame)
+        fl.setContentsMargins(20, 20, 20, 20)
+        fl.setSpacing(12)
+
+        name_label = QLabel("标签名")
+        name_label.setStyleSheet("color: #a0a0a0; font-size: 11px; background: transparent;")
+        self.name_edit = QLineEdit(tag_name)
+        self.name_edit.setPlaceholderText("输入标签名...")
+        fl.addWidget(name_label)
+        fl.addWidget(self.name_edit)
+
+        color_layout = QHBoxLayout()
+        color_layout.setSpacing(8)
+        color_label = QLabel("颜色")
+        color_label.setStyleSheet("color: #a0a0a0; font-size: 11px; background: transparent;")
+        self._color_preview = QLabel()
+        self._color_preview.setFixedSize(24, 24)
+        self._color_preview.setStyleSheet(f"background-color: {tag_color}; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);")
+        self._color_btn = QPushButton("选择颜色")
+        self._color_btn.setProperty("class", "SecondaryBtn")
+        self._color_btn.setStyleSheet("font-size: 10px; padding: 4px 10px;")
+        self._color_btn.clicked.connect(self._pick_color)
+        color_layout.addWidget(color_label)
+        color_layout.addWidget(self._color_preview)
+        color_layout.addStretch()
+        color_layout.addWidget(self._color_btn)
+        fl.addLayout(color_layout)
+
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(8)
+        cancel = QPushButton("取消")
+        cancel.setProperty("class", "SecondaryBtn")
+        cancel.setStyleSheet("font-size: 10px; padding: 4px 14px;")
+        cancel.clicked.connect(self.reject)
+        ok_btn = QPushButton("确定")
+        ok_btn.setProperty("class", "SecondaryBtn")
+        ok_btn.setStyleSheet("font-size: 10px; padding: 4px 14px;")
+        ok_btn.clicked.connect(self._apply)
+        btn_row.addStretch()
+        btn_row.addWidget(cancel)
+        btn_row.addWidget(ok_btn)
+        fl.addLayout(btn_row)
+
+        layout.addWidget(frame)
+
+    def _pick_color(self):
+        from PySide6.QtWidgets import QColorDialog
+        color = QColorDialog.getColor(QColor(self.result_color), self)
+        if color.isValid():
+            self.result_color = color.name()
+            self._color_preview.setStyleSheet(f"background-color: {self.result_color}; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);")
+
+    def _apply(self):
+        self.result_name = self.name_edit.text().strip()
+        self.accept()
+
+
+class GlassNameDialog(GlassDialogBase):
+    def __init__(self, parent, current_name, title="重命名"):
+        super().__init__(parent, w=320, h=140)
+        self.result_name = current_name
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        frame = QFrame(self)
+        fl = QVBoxLayout(frame)
+        fl.setContentsMargins(20, 20, 20, 20)
+        fl.setSpacing(12)
+
+        label = QLabel(title)
+        label.setStyleSheet("color: #a0a0a0; font-size: 11px; background: transparent;")
+        self.name_edit = QLineEdit(current_name)
+        self.name_edit.setPlaceholderText("输入名称...")
+        self.name_edit.selectAll()
+        fl.addWidget(label)
+        fl.addWidget(self.name_edit)
+
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(8)
+        cancel = QPushButton("取消")
+        cancel.setProperty("class", "SecondaryBtn")
+        cancel.setStyleSheet("font-size: 10px; padding: 4px 14px;")
+        cancel.clicked.connect(self.reject)
+        ok_btn = QPushButton("确定")
+        ok_btn.setProperty("class", "PrimaryBtn")
+        ok_btn.setStyleSheet("font-size: 10px; padding: 4px 14px;")
+        ok_btn.clicked.connect(self._apply)
+        btn_row.addStretch()
+        btn_row.addWidget(cancel)
+        btn_row.addWidget(ok_btn)
+        fl.addLayout(btn_row)
+
+        layout.addWidget(frame)
+
+    def _apply(self):
+        self.result_name = self.name_edit.text().strip()
+        self.accept()
+
+
+class DragBackButton(QPushButton):
+    folder_dropped = Signal(str, str)
+
+    def __init__(self, text, parent_path):
+        super().__init__(text)
+        self.parent_path = parent_path
+        self.setProperty("class", "NavBtn")
+        self.setCursor(Qt.PointingHandCursor)
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, e):
+        if e.mimeData().hasText():
+            e.acceptProposedAction()
+
+    def dropEvent(self, e):
+        source = e.mimeData().text()
+        if source:
+            self.folder_dropped.emit(self.parent_path, source)
+
+
+class DragFolderButton(QPushButton):
+    """NavBtn 风格的文件夹按钮，接受拖放."""
+    folder_dropped = Signal(str, str)
+
+    def __init__(self, name, rel_path):
+        super().__init__(f" {name}")
+        self.rel_path = rel_path
+        self.setProperty("class", "NavBtn")
+        self.setCheckable(False)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, e):
+        if e.mimeData().hasText():
+            e.acceptProposedAction()
+
+    def dropEvent(self, e):
+        source = e.mimeData().text()
+        if source:
+            self.folder_dropped.emit(self.rel_path, source)
+
+
+def _extract_tag_name(tag):
+    """Extract tag name string from either old (str) or new (dict) format."""
+    if isinstance(tag, str):
+        return tag.lower()
+    if isinstance(tag, dict):
+        return tag.get("name", "").lower()
+    return ""
+
+
 class MainWindow(QMainWindow):
     ui_log_signal = Signal(str, str) 
 
@@ -637,6 +1577,9 @@ class MainWindow(QMainWindow):
         self.controller = controller
         self.active_editor = None 
         self.force_quit = False 
+        
+        self.saved_emotes_mgr = SavedEmotesManager()
+        self._quick_popup = None
         
         self.hud = FloatingHUD()
         
@@ -737,7 +1680,8 @@ class MainWindow(QMainWindow):
 
         add_section("核心功能")
         add_nav_btn("diamond.svg", "主页探索", 0)
-        add_nav_btn("image.svg", "表情管理", 1 )
+        add_nav_btn("image.svg", "表情管理", 1)
+        add_nav_btn("database.svg", "表情包收集", 4)
         
         add_section("系统与状态")
         add_nav_btn("square-terminal.svg", "运行日志", 2)
@@ -756,6 +1700,9 @@ class MainWindow(QMainWindow):
         
         self.stacked_widget.addWidget(self.create_logs_page())
         self.stacked_widget.addWidget(self.create_settings_page())
+
+        self.collection_page = self.create_emotes_collection_page()
+        self.stacked_widget.addWidget(self.collection_page)
 
         main_layout.addWidget(sidebar)
         main_layout.addWidget(self.stacked_widget)
@@ -841,12 +1788,531 @@ class MainWindow(QMainWindow):
 
     def mouseMoveEvent(self, event: QMouseEvent):
         if event.buttons() == Qt.LeftButton:
+            child = self.childAt(event.position().toPoint())
+            while child:
+                if isinstance(child, SavedEmoteCard):
+                    return
+                child = child.parent()
             self.move(event.globalPosition().toPoint() - self.dragPos)
             event.accept()
 
     def trigger_hud(self, emote_name, img_path):
         logger.debug(f"HUD trigger: {emote_name}")
         self.hud.show_emote(emote_name, img_path)
+
+    def _on_quick_search_hotkey(self):
+        logger.debug("[快速搜索] >>> 热键触发入口 <<<")
+        self.saved_emotes_mgr.reload()
+        try:
+            keyboard.send('ctrl+c')
+            time.sleep(0.05)
+            QApplication.processEvents()
+
+            selected_text = ""
+            try:
+                raw = QApplication.clipboard().text()
+                logger.debug(f"[快速搜索] 剪贴板文字: type={type(raw).__name__}, val={repr(raw)[:80] if raw else 'None'}")
+                if raw and isinstance(raw, str):
+                    selected_text = raw.strip()
+            except Exception as e:
+                logger.debug(f"[快速搜索] 读取剪贴板失败: {e}")
+
+            if not selected_text:
+                logger.debug("[快速搜索] 无选中文字，不弹窗 (仅 /* 等特殊格式会触发)")
+                return
+
+            logger.debug(f"[快速搜索] 选中文字: {repr(selected_text)[:60]}")
+            parsed = self._parse_quick_search_pattern(selected_text)
+            if parsed is None:
+                logger.debug("[快速搜索] 非特殊格式，不弹窗")
+                return
+            items = parsed["items"]
+            fp = parsed.get("folder", "")
+            logger.debug(f"[快速搜索] 解析结果: {len(items)} 项, folder={repr(fp)}")
+            self._show_quick_popup(items, parsed.get("title", selected_text), folder_path=fp)
+        except Exception:
+            logger.exception("[快速搜索] 热键处理异常")
+
+    def _parse_quick_search_pattern(self, text):
+        """
+        解析选中文字，支持子文件夹物理导航。
+        返回 None (不匹配) 或 {"items": [...], "folder": "...", "title": "..."}。
+        格式：/* /目录/ /目录/子目录/ /目录/搜索文字 /目录/tag=标签 /目录/tag=标签/搜索文字
+        目录匹配先后顺序: 物理路径 > JSON folders > display_name
+        """
+        text = text.strip().rstrip('/')
+        if not text:
+            return None
+
+        if text == "/*":
+            items = self._physically_scan_all()
+            logger.debug(f"[快速搜索] /* 扫描全部: {len(items)} 项")
+            for item in items:
+                item["_score"] = 5
+            return {"items": items, "folder": "", "title": "全部收藏"}
+
+        if not text.startswith('/'):
+            return None
+
+        rest = text[1:]
+        if not rest:
+            return None
+
+        current_rel = ""
+        segments = rest.split('/')
+
+        for i, seg in enumerate(segments):
+            if not seg:
+                continue
+            is_last = (i == len(segments) - 1)
+
+            test_rel = (os.path.join(current_rel, seg) if current_rel else seg).replace('\\', '/')
+            phys = self.saved_emotes_mgr.resolve_physical_folder(test_rel)
+
+            if phys:
+                current_rel = test_rel
+                if is_last:
+                    items = self.saved_emotes_mgr.scan_physical_folder(current_rel)
+                    for item in items:
+                        item["_score"] = 5
+                    return {"items": items, "folder": current_rel, "title": seg}
+                continue
+
+            remaining = "/".join(segments[i:])
+            logger.debug(f"[快速搜索] current_rel={repr(current_rel)}, search={repr(remaining)}")
+
+            if not current_rel:
+                folder_key = self._find_folder_key_by_name(seg)
+                if folder_key:
+                    if len(segments) > i + 1:
+                        search_suffix = "/".join(segments[i+1:])
+                        res = self._search_with_syntax(search_suffix, folder_key)
+                        return {"items": res or [], "folder": folder_key, "title": search_suffix}
+                    else:
+                        items = self.saved_emotes_mgr.get_items_in_folder(folder_key)
+                        for item in items:
+                            item["_score"] = 5
+                        return {"items": items, "folder": folder_key, "title": seg}
+
+                items = self.saved_emotes_mgr.scan_physical_folder("")
+                results = self._filter_items_by_text(items, remaining)
+                return {"items": results, "folder": "", "title": remaining}
+
+            res = self._search_with_syntax(remaining, current_rel, physical=True)
+            return {"items": res or [], "folder": current_rel, "title": remaining}
+
+        return {"items": [], "folder": "", "title": rest}
+
+    def _search_with_syntax(self, suffix, folder_key, physical=False):
+        """对后缀进行 tag= / 文本 解析，在指定 folder 内搜索。"""
+        tag_match = re.search(r'tag\s*=\s*([^/]+)', suffix)
+        text_part = re.sub(r'tag\s*=\s*[^/]+', '', suffix).strip().strip('/')
+        
+        if physical:
+            items = self.saved_emotes_mgr.scan_physical_folder(folder_key)
+        else:
+            items = self.saved_emotes_mgr.get_items_in_folder(folder_key)
+        
+        if tag_match:
+            tag_value = tag_match.group(1).strip()
+            logger.debug(f"[快速搜索] tag 筛选: {tag_value} (physical={physical})")
+            items = [it for it in items if any(tag_value.lower() in _extract_tag_name(t) for t in it.get("tags", []))]
+        
+        if text_part:
+            logger.debug(f"[快速搜索] 文字搜索: {text_part}")
+            items = [it for it in items if text_part.lower() in (it.get("display_name", "") or "").lower()]
+        
+        for it in items:
+            it["_score"] = 5
+        return items
+
+    def _filter_items_by_text(self, items, text):
+        """简单文字过滤 + 计分排序。"""
+        results = []
+        for it in items:
+            dn = (it.get("display_name", "") or "").lower()
+            fn = (it.get("filename", "") or "").lower()
+            tl = text.lower()
+            score = 0
+            if dn == tl:
+                score = 100
+            elif tl in dn:
+                score = 50
+            elif fn == tl:
+                score = 80
+            elif tl in fn:
+                score = 40
+            elif any(tl in (_extract_tag_name(t)) for t in it.get("tags", [])):
+                score = 20
+            if score > 0:
+                it["_score"] = score
+                results.append(it)
+        results.sort(key=lambda x: x.get("_score", 0), reverse=True)
+        return results
+
+    def _physically_scan_all(self):
+        """递归扫描整个 SavedEmotes 目录，返回所有媒体文件的 item dict 列表，与 JSON 交叉索引。"""
+        root = self.saved_emotes_mgr.saved_emotes_dir
+        if not os.path.isdir(root):
+            return []
+        json_lookup = {}
+        for item in self.saved_emotes_mgr.collection.get("items", []):
+            fn = item.get("filename", "")
+            if fn:
+                json_lookup[fn] = item
+        results = []
+        valid_exts = ALL_EXTS
+        for dirpath, dirnames, filenames in os.walk(root):
+            rel = os.path.relpath(dirpath, root).replace('\\', '/')
+            if rel == '.':
+                rel = ""
+            for f in sorted(filenames):
+                ext = os.path.splitext(f)[1].lower()
+                if ext not in valid_exts:
+                    continue
+                if f in json_lookup:
+                    item = dict(json_lookup[f])
+                    item["_score"] = 5
+                    results.append(item)
+                else:
+                    results.append({
+                        "id": f,
+                        "folder": rel,
+                        "filename": f,
+                        "display_name": os.path.splitext(f)[0],
+                        "tags": [],
+                        "_score": 5
+                    })
+        return results
+
+    def _find_folder_key_by_name(self, name):
+        folders = self.saved_emotes_mgr.get_folders()
+        name_lower = name.lower()
+        for key, fdata in folders.items():
+            if fdata.get("display_name", key).lower() == name_lower or key.lower() == name_lower:
+                return key
+        return None
+
+    def _destroy_old_popup(self):
+        if self._quick_popup is not None:
+            try:
+                self._quick_popup.emote_selected.disconnect()
+                self._quick_popup.folder_clicked.disconnect()
+            except Exception:
+                pass
+            try:
+                self._quick_popup.hide()
+                self._quick_popup.deleteLater()
+                QApplication.processEvents()
+            except Exception:
+                pass
+            self._quick_popup = None
+
+    def _list_subfolders_at(self, rel_path):
+        """列出指定物理目录下的子文件夹."""
+        root = self.saved_emotes_mgr.saved_emotes_dir
+        abs_path = os.path.join(root, rel_path) if rel_path else root
+        if not os.path.isdir(abs_path):
+            return []
+        result = []
+        try:
+            for entry in sorted(os.listdir(abs_path)):
+                entry_path = os.path.join(abs_path, entry)
+                if os.path.isdir(entry_path) and not entry.startswith('.'):
+                    child_rel = (os.path.join(rel_path, entry) if rel_path else entry).replace('\\', '/')
+                    result.append((entry, child_rel))
+        except OSError:
+            pass
+        return result
+
+    def _show_empty_quick_popup(self, hint):
+        logger.debug(f"[快速搜索] _show_empty_quick_popup: {hint}")
+        self._destroy_old_popup()
+        self._quick_popup = SavedEmoteQuickPopup(self)
+        self._quick_popup.emote_selected.connect(self._on_quick_emote_selected)
+        self._quick_popup.folder_clicked.connect(self._on_quick_folder_clicked)
+        self._quick_popup.set_title(f"未找到匹配 ({hint})")
+        empty_row = QLabel("没有匹配的表情包")
+        empty_row.setStyleSheet("color: #888888; font-size: 12px; background: transparent; padding: 20px;")
+        empty_row.setAlignment(Qt.AlignCenter)
+        self._quick_popup._content_layout.addWidget(empty_row)
+        self._quick_popup.set_folders([], "")
+        self._quick_popup.show_at_cursor()
+
+    def _show_quick_popup(self, items, title_hint, folder_path=""):
+        logger.debug(f"[快速搜索] _show_quick_popup: {title_hint}, {len(items)} 项, path={repr(folder_path)}")
+        self._destroy_old_popup()
+        self._quick_popup = SavedEmoteQuickPopup(self)
+        self._quick_popup.emote_selected.connect(self._on_quick_emote_selected)
+        self._quick_popup.folder_clicked.connect(self._on_quick_folder_clicked)
+        self._quick_popup.set_title(f"表情检索 · {title_hint} ({len(items)}项)")
+        subfolders = self._list_subfolders_at(folder_path)
+        self._quick_popup.set_folders(subfolders, folder_path)
+        items_sorted = sorted(items, key=lambda x: x.get("_score", 0), reverse=True)
+        if items_sorted:
+            for item in items_sorted:
+                file_path = self.saved_emotes_mgr.get_item_path(item)
+                self._quick_popup.add_item(item, file_path, self.saved_emotes_mgr)
+        else:
+            hint = QLabel("此目录无媒体文件" if subfolders else "没有匹配的表情包")
+            hint.setStyleSheet("color: #888888; font-size: 12px; background: transparent; padding: 20px;")
+            hint.setAlignment(Qt.AlignCenter)
+            self._quick_popup._content_layout.addWidget(hint)
+        self._quick_popup.show_at_cursor(len(items))
+
+    def _on_quick_folder_clicked(self, rel_path):
+        """侧栏文件夹被点击 → 用 QTimer 推迟重建，避免 deleteLater 竞态."""
+        # 先记下要导航到的路径，等信号处理完毕后再执行
+        QTimer.singleShot(0, lambda: self._do_navigate(rel_path))
+
+    def _do_navigate(self, rel_path):
+        """实际执行导航：销毁旧弹窗 → 扫描新路径 → 新建弹窗."""
+        if self._quick_popup is None:
+            return
+
+        old_pos = self._quick_popup.pos()
+
+        if rel_path == "__back__":
+            old_path = self._quick_popup._current_path
+            parent = os.path.dirname(old_path) if old_path else ""
+            logger.info(f"[快速搜索] 返回上级文件夹: {parent or '根目录'}")
+            items = self.saved_emotes_mgr.scan_physical_folder(parent)
+            title = os.path.basename(parent) if parent else "SavedEmotes"
+            self._show_quick_popup(items, title, folder_path=parent)
+        else:
+            logger.info(f"[快速搜索] 导航到子文件夹: {rel_path}")
+            dirname = os.path.basename(rel_path)
+            items = self.saved_emotes_mgr.scan_physical_folder(rel_path)
+            self._show_quick_popup(items, dirname, folder_path=rel_path)
+
+        if self._quick_popup is not None:
+            self._quick_popup.move(old_pos)
+
+    def _on_quick_emote_selected(self, file_path):
+        logger.debug(f"[快速搜索] _on_quick_emote_selected: {file_path}")
+        if not file_path or not os.path.exists(file_path):
+            logger.debug(f"[快速搜索] 文件路径无效: {file_path}")
+            return
+        logger.info(f"[快速搜索] 用户选择了: {os.path.basename(file_path)}")
+        send_emote(file_path, clear_after=True)
+        logger.debug("[快速搜索] 粘贴指令已发送")
+
+    # ─── 表情包收集页面 ──────────────────────────────────────────
+
+    def create_emotes_collection_page(self):
+        self._coll_current = ""
+        self._coll_cards = []
+        self._coll_drag_source = None
+
+        page = QWidget()
+        outer = QHBoxLayout(page)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+
+        # ── 左侧文件夹面板 ──
+        coll_sidebar = QFrame()
+        coll_sidebar.setObjectName("Sidebar")
+        coll_sidebar.setFixedWidth(160)
+        coll_sidebar_layout = QVBoxLayout(coll_sidebar)
+        coll_sidebar_layout.setContentsMargins(10, 20, 10, 20)
+        coll_sidebar_layout.setSpacing(6)
+
+        sd_title = QLabel("📂 文件夹")
+        sd_title.setObjectName("SectionTitle")
+        sd_title.setStyleSheet("color: #888888; font-size: 12px; font-weight: bold; padding-left: 8px; background: transparent;")
+        coll_sidebar_layout.addWidget(sd_title)
+
+        self._coll_back_btn = DragBackButton("← 返回上级", "__back__")
+        self._coll_back_btn.folder_dropped.connect(self._coll_handle_drop)
+        self._coll_back_btn.clicked.connect(lambda: self._coll_navigate("__back__"))
+        coll_sidebar_layout.addWidget(self._coll_back_btn)
+
+        self._coll_sidebar_list = QVBoxLayout()
+        self._coll_sidebar_list.setSpacing(2)
+        coll_sidebar_layout.addLayout(self._coll_sidebar_list)
+        coll_sidebar_layout.addStretch()
+
+        new_folder_btn = QPushButton("+ 新增文件夹")
+        new_folder_btn.setProperty("class", "PrimaryBtn")
+        new_folder_btn.setFixedHeight(34)
+        new_folder_btn.setCursor(Qt.PointingHandCursor)
+        new_folder_btn.clicked.connect(self._coll_new_folder)
+        coll_sidebar_layout.addWidget(new_folder_btn)
+
+        # ── 右侧主区域 ──
+        right = QFrame()
+        right_l = QVBoxLayout(right)
+        right_l.setContentsMargins(20, 30, 20, 20)
+        right_l.setSpacing(12)
+
+        top_row = QHBoxLayout()
+        self._coll_bread = QLabel("SavedEmotes")
+        self._coll_bread.setStyleSheet("color: rgba(255,255,255,0.7); font-size: 16px; font-weight: bold; background: transparent;")
+        self._coll_bread.setToolTip("SavedEmotes")
+        top_row.addWidget(self._coll_bread)
+        top_row.addStretch()
+        self._coll_search = QLineEdit()
+        self._coll_search.setPlaceholderText("搜索名称/tag=标签...")
+        self._coll_search.setFixedWidth(220)
+        self._coll_search.textChanged.connect(self._coll_refresh)
+        top_row.addWidget(self._coll_search)
+
+        import_btn = QPushButton("📥 导入文件")
+        import_btn.setProperty("class", "SecondaryBtn")
+        import_btn.clicked.connect(self._coll_import_files)
+        top_row.addWidget(import_btn)
+
+        folder_btn = QPushButton("打开目录")
+        folder_btn.setProperty("class", "SecondaryBtn")
+        folder_btn.clicked.connect(lambda: self._coll_open_dir())
+        top_row.addWidget(folder_btn)
+        right_l.addLayout(top_row)
+
+        # 网格滚动区
+        self._coll_scroll = QScrollArea()
+        self._coll_scroll.setWidgetResizable(True)
+        self._coll_scroll.setFrameShape(QFrame.NoFrame)
+        self._coll_scroll.setStyleSheet("background: transparent;")
+        self._coll_grid_container = QWidget()
+        self._coll_grid_container.setStyleSheet("background: transparent;")
+        self._coll_grid = GridFlowLayout(self._coll_grid_container, spacing=14)
+        self._coll_scroll.setWidget(self._coll_grid_container)
+        right_l.addWidget(self._coll_scroll)
+
+        # 拖拽导入区
+        drop_label = QLabel("将文件拖拽到此处导入")
+        drop_label.setAlignment(Qt.AlignCenter)
+        drop_label.setFixedHeight(44)
+        drop_label.setStyleSheet("color: rgba(255,255,255,0.15); font-size: 13px; background: transparent; border: 2px dashed rgba(255,255,255,0.08); border-radius: 10px;")
+        drop_label.setAcceptDrops(True)
+        drop_label.dragEnterEvent = lambda e: e.acceptProposedAction() if e.mimeData().hasUrls() else None
+        drop_label.dropEvent = self._coll_handle_drag_import
+        right_l.addWidget(drop_label)
+
+        outer.addWidget(coll_sidebar)
+        outer.addWidget(right)
+
+        self._coll_refresh()
+        return page
+
+    def _coll_open_dir(self):
+        abs_path = os.path.join(self.saved_emotes_mgr.saved_emotes_dir, self._coll_current) if self._coll_current else self.saved_emotes_mgr.saved_emotes_dir
+        if os.path.isdir(abs_path):
+            os.startfile(abs_path)
+
+    def _coll_handle_drag_import(self, event):
+        for url in event.mimeData().urls():
+            fp = url.toLocalFile()
+            if fp:
+                self.saved_emotes_mgr.import_file(fp, folder_key=self._coll_current)
+        self._coll_refresh()
+
+    def _coll_refresh(self):
+        self.saved_emotes_mgr.reload()
+        rel = self._coll_current
+        items = self.saved_emotes_mgr.scan_physical_folder(rel)
+
+        search = self._coll_search.text().strip()
+        if search:
+            if 'tag=' in search.lower():
+                items = self.saved_emotes_mgr.search_items(search, rel)
+            else:
+                items = self._filter_items_by_text(items, search)
+
+        self._coll_grid.clear_all()
+        self._coll_cards.clear()
+        QApplication.processEvents()
+
+        if rel:
+            self._coll_bread.setText(f"… / {rel}")
+            self._coll_bread.setToolTip(f"SavedEmotes / {rel}")
+            self._coll_back_btn.show()
+        else:
+            self._coll_bread.setText("SavedEmotes")
+            self._coll_bread.setToolTip("SavedEmotes")
+            self._coll_back_btn.hide()
+
+        self._coll_refresh_sidebar(rel)
+        QApplication.processEvents()
+
+        for i, it in enumerate(items):
+            fp = self.saved_emotes_mgr.get_item_path(it)
+            card = SavedEmoteCard(it, fp, i, self.saved_emotes_mgr)
+            self._coll_grid.addWidget(card)
+            self._coll_cards.append(card)
+
+        self._coll_throttle_gifs()
+        QApplication.processEvents()
+        self._coll_grid._relayout()
+
+    def _coll_refresh_sidebar(self, rel):
+        while self._coll_sidebar_list.count():
+            w = self._coll_sidebar_list.takeAt(0)
+            if w.widget():
+                w.widget().deleteLater()
+        QApplication.processEvents()
+
+        subfolders = self._list_subfolders_at(rel)
+        for name, child_rel in subfolders:
+            item = DragFolderButton(name, child_rel)
+            item.folder_dropped.connect(self._coll_handle_drop)
+            item.clicked.connect(lambda checked, p=child_rel: self._coll_navigate(p))
+            self._coll_sidebar_list.addWidget(item)
+
+    def _coll_handle_drop(self, rel_target, source_file):
+        """从卡片拖拽到文件夹/返回上级 → 移动文件."""
+        if rel_target == "__back__":
+            parent = os.path.dirname(self._coll_current) if self._coll_current else ""
+            target = parent if parent else ""
+        else:
+            target = rel_target
+        target_name = os.path.basename(target) if target else "SavedEmotes"
+        for card in self._coll_cards:
+            if card.file_path == source_file:
+                item_id = card.item_data.get("id")
+                if item_id:
+                    self.saved_emotes_mgr.move_item(item_id, target)
+                    logger.info(f"[收集] 移动文件到: {target_name}")
+                    self._coll_refresh()
+                break
+
+    def _coll_navigate(self, rel):
+        if rel == "__back__":
+            parent = os.path.dirname(self._coll_current) if self._coll_current else ""
+            self._coll_current = parent if parent else ""
+        else:
+            self._coll_current = rel
+        self._coll_search.clear()
+        self._coll_refresh()
+
+    def _coll_throttle_gifs(self):
+        GIF_LIMIT = 5
+        visible = 0
+        for card in self._coll_cards:
+            if card.isVisible():
+                visible += 1
+        for card in self._coll_cards:
+            if visible > GIF_LIMIT:
+                card.stop_gif()
+            else:
+                card.start_gif()
+
+    def _coll_new_folder(self):
+        dlg = GlassNameDialog(self, "", "新建文件夹")
+        if dlg.exec() and dlg.result_name:
+            self.saved_emotes_mgr.create_folder(dlg.result_name)
+            self._coll_refresh()
+
+    def _coll_import_files(self):
+        from PySide6.QtWidgets import QFileDialog
+        files, _ = QFileDialog.getOpenFileNames(
+            self, "导入表情包文件", "",
+            "媒体文件 (*.png *.jpg *.jpeg *.gif *.mp4 *.webp *.webm *.mp3 *.wav *.bmp *.tiff *.ogg *.avi *.mov)"
+        )
+        if files:
+            for fp in files:
+                self.saved_emotes_mgr.import_file(fp, folder_key=self._coll_current)
+            self._coll_refresh()
 
     def create_home_page(self):
         page = QWidget()
@@ -902,7 +2368,8 @@ class MainWindow(QMainWindow):
                 self.controller.start_listening(
                     self.config_mgr.load_all_emotes(), 
                     global_cfg, 
-                    self.trigger_hud
+                    self.trigger_hud,
+                    self._on_quick_search_hotkey
                 )
                 self.start_btn.setText("关闭后台系统")
                 self.start_btn.setStyleSheet("background-color: #34c759; color: #ffffff;")
@@ -1048,7 +2515,8 @@ class MainWindow(QMainWindow):
             self.controller.start_listening(
                 self.config_mgr.load_all_emotes(),
                 self.config_mgr.load_global_settings(),
-                self.trigger_hud
+                self.trigger_hud,
+                self._on_quick_search_hotkey
             )
 
     @Slot(str, str)

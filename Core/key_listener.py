@@ -23,6 +23,7 @@ class ChatBoxController(QObject):
     arm_signal = Signal(dict)
     execute_signal = Signal()
     quit_signal = Signal()
+    quick_search_signal = Signal()
 
     def __init__(self, clipboard_mgr: ClipboardManager, image_gen: ImageGenerator):
         super().__init__()
@@ -38,11 +39,18 @@ class ChatBoxController(QObject):
         self.armed_emote_cfg = None
         # UI 传进来的悬浮窗回调函数
         self.hud_callback = None
+        # 快速搜索回调函数
+        self.quick_search_callback = None
+        
+        # Ctrl+A 触发快速搜索的防抖状态
+        self._last_ctrl_a_time = 0
+        self._ctrl_a_trigger_enabled = False
 
         # 绑定信号槽，确保多线程跨越时在主 GUI 线程执行
         self.arm_signal.connect(self._arm_emote, Qt.QueuedConnection)
         self.execute_signal.connect(self._execute_workflow, Qt.QueuedConnection)
         self.quit_signal.connect(QApplication.instance().quit, Qt.QueuedConnection)
+        self.quick_search_signal.connect(self._on_quick_search_triggered, Qt.QueuedConnection)
 
     def trigger_arm(self, emote_cfg):
         """按下具体表情的快捷键，触发装填信号"""
@@ -54,6 +62,36 @@ class ChatBoxController(QObject):
             logger.debug("当前焦点不在白名单软件中，发射指令被忽略。")
             return
         self.execute_signal.emit()
+
+    def trigger_quick_search(self):
+        """按下快速搜索快捷键，触发快速搜索信号"""
+        self.quick_search_signal.emit()
+
+    def _on_ctrl_a_pressed(self):
+        """Ctrl+A 全选快捷键处理 —— 仅在白名单应用中触发快速搜索"""
+        if not self._ctrl_a_trigger_enabled:
+            return
+        
+        if not self.is_target_app_active():
+            logger.debug("[快速搜索] Ctrl+A 已按下，但当前不在白名单应用中，跳过")
+            return
+        
+        current_time = time.time()
+        if current_time - self._last_ctrl_a_time < 0.5:
+            return
+        self._last_ctrl_a_time = current_time
+        
+        logger.info("[快速搜索] Ctrl+A 在白名单应用中触发，准备弹出搜索面板")
+        self.trigger_quick_search()
+
+    @Slot()
+    def _on_quick_search_triggered(self):
+        """在主 GUI 线程执行快速搜索回调"""
+        if self.quick_search_callback:
+            try:
+                self.quick_search_callback()
+            except Exception:
+                logger.exception("[快速搜索] 回调执行异常")
 
     def quit(self):
         self.quit_signal.emit()
@@ -257,7 +295,7 @@ class ChatBoxController(QObject):
         except Exception:
             logger.exception("工作流执行时发生致命异常")
 
-    def start_listening(self, emotes_configs=None, global_settings=None, hud_callback=None):
+    def start_listening(self, emotes_configs=None, global_settings=None, hud_callback=None, quick_search_callback=None):
         if self.is_running:
             self.stop_listening()
 
@@ -267,6 +305,8 @@ class ChatBoxController(QObject):
             self.global_settings = global_settings
         if hud_callback is not None:
             self.hud_callback = hud_callback
+        if quick_search_callback is not None:
+            self.quick_search_callback = quick_search_callback
 
         is_block = self.global_settings.get("block_keys", True) if self.global_settings else True
 
@@ -293,6 +333,41 @@ class ChatBoxController(QObject):
             except Exception:
                 logger.exception(f"全局快捷键注册失败: {global_hk}")
 
+        # 注册快速搜索快捷键 (默认 alt+/)
+        qs_hk = (self.global_settings or {}).get("quick_search_hotkey", "alt+/").lower()
+        if qs_hk:
+            try:
+                keyboard.add_hotkey(
+                    qs_hk, self.trigger_quick_search, suppress=is_block
+                )
+                self.active_hotkeys.append(f"快速搜索:{qs_hk}")
+                logger.info(f"注册快速搜索快捷键: {qs_hk}")
+            except Exception:
+                logger.exception(f"快速搜索快捷键注册失败: {qs_hk}")
+
+        # 注册 Ctrl+A 全选快捷键触发快速搜索 (仅在白名单应用中生效)
+        self._ctrl_a_trigger_enabled = self.global_settings.get("ctrl_a_trigger_quick_search", True)
+        if self._ctrl_a_trigger_enabled:
+            try:
+                keyboard.add_hotkey(
+                    "ctrl+a", self._on_ctrl_a_pressed, suppress=False
+                )
+                self.active_hotkeys.append("快速搜索:ctrl+a")
+                logger.info("[快速搜索] 已注册 Ctrl+A 触发 (仅白名单应用生效)")
+            except Exception:
+                logger.exception("[快速搜索] Ctrl+A 注册失败")
+
+        # 测试方法: 打印当前白名单
+        raw_procs = self.global_settings.get("target_processes", []) if self.global_settings else []
+        if raw_procs:
+            if isinstance(raw_procs, str):
+                target_list = [p.strip() for p in raw_procs.split(",") if p.strip()]
+            else:
+                target_list = [str(p).strip() for p in raw_procs if str(p).strip()]
+            logger.info(f"[快速搜索] 当前白名单应用: {target_list}")
+        else:
+            logger.info("[快速搜索] 未设置白名单，Ctrl+A 将在所有应用中触发快速搜索")
+
         self.is_running = True
         logger.info(f"后台监听已启动 | 监控键位: {self.active_hotkeys}")
 
@@ -316,11 +391,20 @@ if __name__ == "__main__":
     test_emotes = [
         {"name": "测试表情", "hotkey": "alt+1", "_folder_path": "", "is_enabled": True}
     ]
-    test_globals = {"global_trigger_key": "alt+s", "block_keys": True, "show_hud": True}
+    test_globals = {
+        "global_trigger_key": "alt+s",
+        "block_keys": True,
+        "show_hud": True,
+        "quick_search_hotkey": "alt+/",
+        "ctrl_a_trigger_quick_search": True
+    }
 
     def mock_hud(name, path):
         logger.info(f">>> [HUD 悬浮窗真实验证] 成功收到弹窗指令！当前已装备: {name}")
 
-    controller.start_listening(test_emotes, test_globals, mock_hud)
-    logger.info("请按 Alt+1 装填，再按 Alt+S 执行发射测试。按 Ctrl+C 退出...")
+    def mock_quick_search():
+        logger.info(">>> [快速搜索真实验证] 快捷搜索信号已触发！")
+
+    controller.start_listening(test_emotes, test_globals, mock_hud, mock_quick_search)
+    logger.info("请按 Alt+1 装填，Alt+S 发射，Alt+/ 或 Ctrl+A(白名单) 测试快速搜索。按 Ctrl+C 退出...")
     sys.exit(app.exec())

@@ -1,7 +1,7 @@
 {
     "global_trigger_key": "ctrl+enter",
     "block_keys": true,
-    "delay_ms": 181,
+    "delay_ms": 176,
     "auto_start": false,
     "show_hud": true,
     "show_tray_msg": true,
