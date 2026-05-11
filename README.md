@@ -29,10 +29,10 @@ A tool that generates images base on your chatbox and adds a shortcut for sendin
 
 ## How to use
 
-\```bash
+
 get the zip from release  
 double click exe
-\```
+
 
 ## How to use (special function)
 
