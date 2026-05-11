@@ -10,9 +10,7 @@ def get_root_dir():
     else:
         return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 class ConfigManager:
-    """
-    全局配置与表情包配置管理器
-    """
+    """全局配置与表情包配置管理器"""
     def __init__(self):
         self.root_dir = get_root_dir()
         

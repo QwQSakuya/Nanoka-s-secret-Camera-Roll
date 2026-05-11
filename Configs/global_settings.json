@@ -40,5 +40,6 @@
         "wechat.exe",
         "qq.exe",
         "firefox.exe"
-    ]
+    ],
+    "quick_search_delay_ms": 141
 }

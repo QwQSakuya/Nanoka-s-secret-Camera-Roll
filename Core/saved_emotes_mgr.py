@@ -18,42 +18,7 @@ def get_root_dir_saved():
 
 
 class SavedEmotesManager:
-    """
-    表情包收藏管理器 (SavedEmotes)
-    
-    目录结构:
-        SavedEmotes/
-            collection.json          # 全局收藏元数据
-            folder_a/                # 用户创建的文件夹
-                item1.png
-                item1.png.meta.json  # 每个表情包的元数据（tags, display_name）
-            folder_b/
-                ...
-    
-    collection.json 格式:
-    {
-        "version": 1,
-        "folders": {
-            "default": { "display_name": "默认收藏", "sort_order": 0 },
-            "folder_xxx": { "display_name": "我的表情", "sort_order": 1 }
-        },
-        "items": [
-            {
-                "id": "uuid_or_filename",
-                "folder": "default",
-                "filename": "item1.png",
-                "display_name": "",
-                "tags": [
-                    {"name": "tag1", "color": "#66b2ff"},
-                    {"name": "tag2", "color": "#ff6b6b"}
-                ],
-                "added_at": 1234567890.0,
-                "sort_order": 0
-            }
-        ]
-    }
-    """
-
+    """表情包收藏管理器"""
     def __init__(self):
         self.root_dir = get_root_dir_saved()
         self.saved_emotes_dir = os.path.join(self.root_dir, "SavedEmotes")
@@ -66,7 +31,6 @@ class SavedEmotesManager:
     def reload(self):
         """Reload collection from disk and sync with physical files."""
         self.collection = self._load_collection()
-        # 清理已物理删除的条目
         removed = []
         valid_items = []
         for item in self.collection.get("items", []):
@@ -160,7 +124,7 @@ class SavedEmotesManager:
         except Exception as e:
             logger.error(f"保存收藏数据库失败: {e}")
 
-    # ─── Folder Operations ────────────────────────────────────────
+    # 文件夹操作
 
     def get_folders(self) -> dict:
         """Return all folders sorted by sort_order."""
@@ -240,7 +204,7 @@ class SavedEmotesManager:
                 self.collection["folders"][key]["sort_order"] = idx
         self._save_collection()
 
-    # ─── Item Operations ──────────────────────────────────────────
+    # 项目操作
 
     def get_items_in_folder(self, folder_key: str = None) -> list:
         """
@@ -364,7 +328,21 @@ class SavedEmotesManager:
                 item["display_name"] = new_display_name
                 self._save_collection()
                 return True
-        return False
+        
+        # Item not yet in collection — auto-import it
+        new_item = {
+            "id": item_id,
+            "folder": folder_key or "",
+            "filename": item_id,
+            "display_name": new_display_name,
+            "tags": [],
+            "added_at": time.time(),
+            "sort_order": 0
+        }
+        self.collection["items"].append(new_item)
+        self._save_collection()
+        logger.info(f"Auto-imported orphan item for rename: {item_id} (folder={folder_key})")
+        return True
 
     def set_item_tags(self, item_id: str, tags: list, folder_key: str = None):
         """Set the tags for an item. Tags are list of dicts {"name":..., "color":...}."""
@@ -373,7 +351,22 @@ class SavedEmotesManager:
                 item["tags"] = tags
                 self._save_collection()
                 return True
-        return False
+        
+        # Item not yet in collection (e.g., scanned from physical folder but never imported)
+        # Auto-import it now so tags persist across sessions
+        new_item = {
+            "id": item_id,
+            "folder": folder_key or "",
+            "filename": item_id,
+            "display_name": os.path.splitext(item_id)[0],
+            "tags": tags,
+            "added_at": time.time(),
+            "sort_order": 0
+        }
+        self.collection["items"].append(new_item)
+        self._save_collection()
+        logger.info(f"Auto-imported orphan item for tag save: {item_id} (folder={folder_key})")
+        return True
 
     def move_item(self, item_id: str, target_folder: str):
         """Move an item to a different folder (including physical file)."""
@@ -420,14 +413,13 @@ class SavedEmotesManager:
 
     def reorder_items(self, folder_key: str, ordered_ids: list):
         """Reorder items within a folder by assigning sequential sort_order."""
-        # Build a lookup for speed
         id_to_idx = {item_id: idx for idx, item_id in enumerate(ordered_ids)}
         for item in self.collection["items"]:
             if item.get("folder") == folder_key and item.get("id") in id_to_idx:
                 item["sort_order"] = id_to_idx[item["id"]]
         self._save_collection()
 
-    # ─── Search ───────────────────────────────────────────────────
+    # 搜索
 
     def search_items(self, query: str, folder_key: str = None, match_mode: str = "partial") -> list:
         """
@@ -529,7 +521,7 @@ class SavedEmotesManager:
                 tags_set.add(tag)
         return sorted(list(tags_set))
 
-    # ─── File Path Helpers ────────────────────────────────────────
+    # 文件路径辅助
 
     def get_item_path(self, item: dict) -> str:
         """Get the full filesystem path for an item."""
@@ -541,7 +533,7 @@ class SavedEmotesManager:
         os.makedirs(folder_path, exist_ok=True)
         return folder_path
 
-    # ─── Physical folder scanning ─────────────────────────────────
+    # 物理文件夹扫描
 
     def resolve_physical_folder(self, rel_path: str) -> str:
         """Resolve a relative path to absolute, return empty if not a directory."""

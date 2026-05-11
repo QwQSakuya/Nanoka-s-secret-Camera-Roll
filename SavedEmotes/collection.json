@@ -58,10 +58,32 @@
                 {
                     "name": "睡觉",
                     "color": "#4d96ff"
+                },
+                {
+                    "name": "test",
+                    "color": "#66b2ff"
                 }
             ],
             "added_at": 1778318004.0,
             "sort_order": 1
+        },
+        {
+            "id": "nnk_punching.gif",
+            "folder": "cat",
+            "filename": "nnk_punching.gif",
+            "display_name": "nnk_punching",
+            "tags": [
+                {
+                    "name": "test",
+                    "color": "#66b2ff"
+                },
+                {
+                    "name": "a",
+                    "color": "#66b2ff"
+                }
+            ],
+            "added_at": 1778425079.663708,
+            "sort_order": 0
         }
     ]
 }

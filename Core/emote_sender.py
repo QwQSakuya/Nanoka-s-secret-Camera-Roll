@@ -1,12 +1,15 @@
 import os
+import sys
 import time
+import threading
 import ctypes
 from ctypes import wintypes
 import keyboard
-from PySide6.QtGui import QImage
+from PySide6.QtGui import QImage,QPixmap
 from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QMimeData, QUrl, Qt, QByteArray
+from PySide6.QtSvg import QSvgRenderer
 from Core.logger import logger
-
 
 IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.bmp', '.tiff'}
 ALL_EXTS = IMAGE_EXTS | {'.gif', '.mp4', '.webm', '.mp3', '.wav', '.ogg', '.avi', '.mov'}
@@ -14,92 +17,89 @@ ALL_EXTS = IMAGE_EXTS | {'.gif', '.mp4', '.webm', '.mp3', '.wav', '.ogg', '.avi'
 # TODO: 未来设置项 — 用户可选择 GIF 是否以首帧静图发送
 _SEND_GIF_AS_STATIC = False
 
-# ── Windows CF_HDROP 常量 ──
+# 剪贴板清理总开关
+_ENABLE_CLEANUP = True
+
+# Windows CF_HDROP 常量
 CF_HDROP = 15
 GMEM_MOVEABLE = 0x0002
 GMEM_ZEROINIT = 0x0040
 
-_DROPFILES_SIZE = ctypes.sizeof(wintypes.DWORD) * 5  # pFiles + pt + fNC + fWide = 20 bytes
+
+class DROPFILES(ctypes.Structure):
+    _fields_ = [
+        ("pFiles", wintypes.DWORD),
+        ("pt", wintypes.POINT),
+        ("fNC", wintypes.BOOL),
+        ("fWide", wintypes.BOOL),
+    ]
 
 
-def _copy_file_via_cf_hdrop(file_path: str) -> bool:
+def set_cleanup_after_send(enabled: bool):
+    """设置发送后是否自动清理剪贴板（总开关）。"""
+    global _ENABLE_CLEANUP
+    _ENABLE_CLEANUP = enabled
+    logger.info(f"[EmoteSender] 剪贴板清理已{'启用' if enabled else '禁用'}")
+
+
+def _set_windows_clipboard_hdrop(file_path: str):
     """
-    使用 Windows 原生 CF_HDROP 格式将文件写入剪贴板。
-    这是 QQ/微信等软件能正确识别「文件拖放粘贴」的唯一方式。
+    使用 ctypes 直接向 Windows 剪贴板注入 CF_HDROP 格式。
+    仅追加格式，不清空已有数据（保留 QMimeData 写入的其他格式）。
+    仅在 Windows 上有效。
     """
-    kernel32 = ctypes.windll.kernel32
-    user32 = ctypes.windll.user32
-    shell32 = ctypes.windll.shell32
-
-    file_path_w = file_path + '\0'
-
-    # 计算所需内存大小
-    dropfiles_size = _DROPFILES_SIZE
-    filename_size = len(file_path_w) * ctypes.sizeof(wintypes.WCHAR)
-    total_size = dropfiles_size + filename_size + ctypes.sizeof(wintypes.WCHAR)  # 末尾额外 \0
-
-    # 分配全局内存
-    h_global = kernel32.GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, total_size)
-    if not h_global:
-        logger.error("[EmoteSender] GlobalAlloc 失败")
-        return False
+    if os.name != 'nt':
+        return
 
     try:
-        p_global = kernel32.GlobalLock(h_global)
-        if not p_global:
-            logger.error("[EmoteSender] GlobalLock 失败")
-            return False
+        # 路径必须以双 NULL 结尾，且使用宽字符 (utf-16-le)
+        files = file_path.replace("/", "\\") + "\0" + "\0"
+        data = files.encode("utf-16-le")
+
+        # 准备 DROPFILES 结构体
+        df = DROPFILES()
+        df.pFiles = ctypes.sizeof(DROPFILES)
+        df.fWide = True  # 使用 Unicode (WideChar)
+
+        # 合并结构体和路径数据
+        combined_data = bytes(df) + data
+        size = len(combined_data)
+
+        # 打开 Windows 剪贴板
+        if not ctypes.windll.user32.OpenClipboard(0):
+            logger.debug("[EmoteSender] OpenClipboard 失败 (可能被其他进程占用)")
+            return
 
         try:
-            # 写入 DROPFILES 结构头
-            ctypes.memmove(p_global,
-                           (ctypes.c_uint * 5)(_DROPFILES_SIZE, 0, 0, 0, 1),
-                           _DROPFILES_SIZE)
+            # 注意：不调用 EmptyClipboard()，保留已有的 QMimeData 格式
+            h_global = ctypes.windll.kernel32.GlobalAlloc(
+                GMEM_MOVEABLE | GMEM_ZEROINIT, size
+            )
+            if not h_global:
+                logger.error("[EmoteSender] GlobalAlloc 失败")
+                return
 
-            # 写入文件路径 (宽字符)
-            file_offset = ctypes.c_void_p(p_global + _DROPFILES_SIZE)
-            ctypes.windll.kernel32.lstrcpyW(file_offset, file_path)
+            p_global = ctypes.windll.kernel32.GlobalLock(h_global)
+            try:
+                ctypes.memmove(p_global, combined_data, size)
+            finally:
+                ctypes.windll.kernel32.GlobalUnlock(h_global)
 
+            ctypes.windll.user32.SetClipboardData(CF_HDROP, h_global)
+            logger.debug("[EmoteSender] CF_HDROP 已注入剪贴板")
         finally:
-            kernel32.GlobalUnlock(h_global)
+            ctypes.windll.user32.CloseClipboard()
 
-        # 打开并清空剪贴板
-        if not user32.OpenClipboard(0):
-            logger.error("[EmoteSender] OpenClipboard 失败")
-            kernel32.GlobalFree(h_global)
-            return False
-
-        try:
-            if not user32.EmptyClipboard():
-                logger.error("[EmoteSender] EmptyClipboard 失败")
-                kernel32.GlobalFree(h_global)
-                return False
-
-            if not user32.SetClipboardData(CF_HDROP, h_global):
-                logger.error("[EmoteSender] SetClipboardData 失败")
-                kernel32.GlobalFree(h_global)
-                return False
-
-            # 所有权已移交系统，不再手动 GlobalFree
-        finally:
-            user32.CloseClipboard()
-
-        return True
-
-    except Exception:
-        logger.exception("[EmoteSender] CF_HDROP 写入异常")
-        try:
-            kernel32.GlobalFree(h_global)
-        except Exception:
-            pass
-        return False
+    except Exception as e:
+        logger.warning(f"[EmoteSender] Windows 原生剪贴板注入失败: {e}")
 
 
 def copy_file_to_clipboard(file_path: str) -> bool:
     """
     将表情文件以最优方式复制到剪贴板。
     · 静态图片 (png/jpg/webp) → 以 QImage 格式写入
-    · GIF/视频/音频 → 以 Windows 原生 CF_HDROP 格式写入，聊天软件直接识别为文件拖放
+    · GIF → QMimeData URL + Windows CF_HDROP 双保险
+    · 视频/音频 → 以文件引用 (text/uri-list) 写入，由聊天软件自行处理
     """
     if not file_path or not os.path.isfile(file_path):
         logger.error(f"[EmoteSender] 文件不存在: {file_path}")
@@ -108,7 +108,7 @@ def copy_file_to_clipboard(file_path: str) -> bool:
     ext = os.path.splitext(file_path)[1].lower()
     filename = os.path.basename(file_path)
 
-    # ── 静态图片 → QImage ──
+    # 静态图片 → QImage
     if ext in IMAGE_EXTS:
         img = QImage(file_path)
         if img.isNull():
@@ -118,50 +118,114 @@ def copy_file_to_clipboard(file_path: str) -> bool:
         logger.info(f"[EmoteSender] 已复制图片到剪贴板 ({filename})")
         return True
 
-    # ── GIF/视频/音频 → Windows 原生 CF_HDROP ──
-    if _copy_file_via_cf_hdrop(file_path):
-        logger.info(f"[EmoteSender] 已复制文件到剪贴板(CF_HDROP) ({filename}, {ext})")
+    # GIF → QMimeData URL + CF_HDROP 双保险
+    if ext == '.gif':
+        mime = QMimeData()
+        mime.setUrls([QUrl.fromLocalFile(file_path)])
+        QApplication.clipboard().setMimeData(mime)
+        logger.debug(f"[EmoteSender] QMimeData URL 已写入 ({filename})")
+
+        # 追加 Windows 原生 CF_HDROP
+        _set_windows_clipboard_hdrop(file_path)
+        logger.info(f"[EmoteSender] 已复制 GIF 到剪贴板 ({filename})")
         return True
-    else:
-        logger.error(f"[EmoteSender] CF_HDROP 写入失败: {file_path}")
-        return False
+
+    # 视频/音频 → 文件引用
+    mime = QMimeData()
+    mime.setUrls([QUrl.fromLocalFile(file_path)])
+    QApplication.clipboard().setMimeData(mime)
+    logger.info(f"[EmoteSender] 已复制文件引用到剪贴板 ({filename}, {ext})")
+    return True
 
 
 def paste_to_chat(delay_ms: int = 50):
-    """
-    将剪贴板内容粘贴到聊天框 (Ctrl+V)。
-    延迟确保剪贴板数据已被系统完全提交。
-    """
+    """将剪贴板内容粘贴到聊天框 (Ctrl+V)，延迟后按需清理剪贴板"""
     if delay_ms > 0:
         time.sleep(delay_ms / 1000.0)
     keyboard.send('ctrl+v')
     logger.debug("[EmoteSender] Ctrl+V 已发送")
 
-
-def _clear_clipboard():
-    """清空剪贴板，防止内容残留。"""
-    clipboard = QApplication.clipboard()
-    for _ in range(3):
-        clipboard.clear()
-        clipboard.setText("")
-        QApplication.processEvents()
-        if not clipboard.mimeData().hasImage() and not clipboard.mimeData().hasText():
-            return
-        time.sleep(0.01)
-    logger.debug("[EmoteSender] 剪贴板清理：多次尝试后仍残留内容")
+    # 粘贴后延迟清理剪贴板，避免残留数据
+    # 使用 threading.Timer 而非 QTimer，确保弹窗关闭后仍能触发清理
+    if _ENABLE_CLEANUP:
+        cleanup_delay = 500
+        threading.Timer(cleanup_delay / 1000.0, _cleanup_clipboard).start()
+        logger.debug(f"[EmoteSender] 将在 {cleanup_delay}ms 后清理剪贴板")
 
 
-def send_emote(file_path: str, clear_after: bool = True) -> bool:
-    """
-    一站式发送：复制 + 粘贴 + (可选)清空剪贴板。
-    clear_after=True 时，粘贴完成后会清空剪贴板，避免发送后残留。
-    返回是否成功。
-    """
+def _cleanup_clipboard():
+    """清空剪贴板（使用稳健清理，确保文字和图片都被清除）。"""
+    try:
+        from Core.clipboard_mgr import ClipboardManager
+        ClipboardManager.robust_clear()
+        logger.debug("[EmoteSender] 剪贴板已清理")
+    except Exception:
+        logger.exception("[EmoteSender] 剪贴板清理时发生异常")
+
+
+def send_emote(file_path: str, delay_ms: int = 50) -> bool:
+    """一站式发送：复制 + 粘贴，返回是否成功"""
     if not copy_file_to_clipboard(file_path):
         return False
-    paste_to_chat()
-    if clear_after:
-        # 留一点时间给目标软件接收粘贴的内容
-        time.sleep(0.3)
-        _clear_clipboard()
+    paste_to_chat(delay_ms=delay_ms)
     return True
+
+
+def get_video_first_frame_pixmap(video_path: str, width: int, height: int) -> "QPixmap|None":
+    """使用 OpenCV 提取视频首帧，返回缩放后的 QPixmap，失败返回 None"""
+    try:
+        import cv2
+        import numpy as np
+        from PySide6.QtGui import QImage, QPixmap
+    except ImportError:
+        logger.warning("[EmoteSender] opencv-python-headless 未安装，无法提取视频首帧")
+        return None
+
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        logger.debug(f"[EmoteSender] 无法打开视频: {video_path}")
+        return None
+
+    ret, frame = cap.read()
+    cap.release()
+    if not ret:
+        logger.debug(f"[EmoteSender] 无法读取视频帧: {video_path}")
+        return None
+
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    h, w, ch = frame_rgb.shape
+    bytes_per_line = ch * w
+    qimg = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
+    pixmap = QPixmap.fromImage(qimg)
+    return pixmap.scaled(width, height, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+
+
+def get_external_resource_path(relative_path: str) -> str:
+    """Get absolute path for external resources (supports both dev and frozen exe)."""
+    if getattr(sys, 'frozen', False):
+        base_path = os.path.dirname(sys.executable)
+    else:
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+
+def load_svg_pixmap(svg_filename: str, width: int, height: int):
+    """Load an SVG from Assets/Svg/ and render it to a QPixmap of given size.  Returns None on failure."""
+    svg_path = get_external_resource_path(f"Assets/Svg/{svg_filename}")
+    if not os.path.exists(svg_path):
+        return None
+    try:
+        with open(svg_path, 'r', encoding='utf-8') as f:
+            svg_content = f.read()
+        renderer = QSvgRenderer(QByteArray(svg_content.encode('utf-8')))
+        if not renderer.isValid():
+            return None
+        pixmap = QPixmap(width, height)
+        pixmap.fill(Qt.transparent)
+        from PySide6.QtGui import QPainter
+        painter = QPainter(pixmap)
+        renderer.render(painter)
+        painter.end()
+        return pixmap
+    except Exception:
+        return None

@@ -1,0 +1,46 @@
+[2026-05-11 17:11:40] [INFO] [main.py:33] 正在初始化底层引擎组件...
+[2026-05-11 17:11:40] [DEBUG] [clipboard_mgr.py:17] ClipboardManager 已初始化
+[2026-05-11 17:11:40] [INFO] [main.py:38] 正在加载配置管理器...
+[2026-05-11 17:11:40] [WARNING] [config_mgr.py:60] EmoteConfigs 文件夹为空，请确保打包时附带了表情包配置。
+[2026-05-11 17:11:40] [INFO] [main.py:43] 正在启动UI 主界面...
+[2026-05-11 17:11:40] [WARNING] [main_window.py:1327] SVG icon not found: ./Assets/Svg\diamond.svg
+[2026-05-11 17:11:40] [WARNING] [main_window.py:1327] SVG icon not found: ./Assets/Svg\image.svg
+[2026-05-11 17:11:40] [WARNING] [main_window.py:1327] SVG icon not found: ./Assets/Svg\database.svg
+[2026-05-11 17:11:40] [WARNING] [main_window.py:1327] SVG icon not found: ./Assets/Svg\square-terminal.svg
+[2026-05-11 17:11:40] [WARNING] [main_window.py:1327] SVG icon not found: ./Assets/Svg\settings-2.svg
+[2026-05-11 17:11:42] [WARNING] [config_mgr.py:60] EmoteConfigs 文件夹为空，请确保打包时附带了表情包配置。
+[2026-05-11 17:11:42] [INFO] [main.py:47] 正在挂载并启动后台热键和悬浮窗...
+[2026-05-11 17:11:42] [INFO] [main.py:50] 正在自动挂载并启动后台热键监听系统...
+[2026-05-11 17:11:42] [WARNING] [config_mgr.py:60] EmoteConfigs 文件夹为空，请确保打包时附带了表情包配置。
+[2026-05-11 17:11:42] [INFO] [key_listener.py:325] 注册全局发送快捷键: alt+enter
+[2026-05-11 17:11:42] [INFO] [key_listener.py:337] 注册快速搜索快捷键: alt+/
+[2026-05-11 17:11:42] [INFO] [key_listener.py:349] [快速搜索] 已注册 Ctrl+A 触发 (仅白名单应用生效)
+[2026-05-11 17:11:42] [INFO] [key_listener.py:362] [快速搜索] 未设置白名单，Ctrl+A 将在所有应用中触发快速搜索
+[2026-05-11 17:11:42] [INFO] [key_listener.py:365] 后台监听已启动 | 监控键位: ['全局输出:alt+enter', '快速搜索:alt+/', '快速搜索:ctrl+a']
+[2026-05-11 17:11:42] [INFO] [main.py:76] 加载默认初始表情: 待命...
+[2026-05-11 17:11:42] [DEBUG] [main_window.py:1504] HUD trigger: 待命...
+[2026-05-11 17:11:42] [INFO] [main.py:79] 引擎全部初始化完毕，现已处于待命状态
+[2026-05-11 17:11:47] [INFO] [key_listener.py:371] 后台监听已停止
+[2026-05-11 19:52:52] [INFO] [main.py:33] 正在初始化底层引擎组件...
+[2026-05-11 19:52:52] [DEBUG] [clipboard_mgr.py:13] ClipboardManager 已初始化
+[2026-05-11 19:52:52] [INFO] [main.py:38] 正在加载配置管理器...
+[2026-05-11 19:52:52] [WARNING] [config_mgr.py:58] EmoteConfigs 文件夹为空，请确保打包时附带了表情包配置。
+[2026-05-11 19:52:52] [INFO] [main.py:43] 正在启动UI 主界面...
+[2026-05-11 19:52:52] [WARNING] [main_window.py:1339] SVG icon not found: ./Assets/Svg\diamond.svg
+[2026-05-11 19:52:52] [WARNING] [main_window.py:1339] SVG icon not found: ./Assets/Svg\image.svg
+[2026-05-11 19:52:52] [WARNING] [main_window.py:1339] SVG icon not found: ./Assets/Svg\database.svg
+[2026-05-11 19:52:52] [WARNING] [main_window.py:1339] SVG icon not found: ./Assets/Svg\square-terminal.svg
+[2026-05-11 19:52:52] [WARNING] [main_window.py:1339] SVG icon not found: ./Assets/Svg\settings-2.svg
+[2026-05-11 19:52:53] [WARNING] [config_mgr.py:58] EmoteConfigs 文件夹为空，请确保打包时附带了表情包配置。
+[2026-05-11 19:52:53] [INFO] [main.py:47] 正在挂载并启动后台热键和悬浮窗...
+[2026-05-11 19:52:53] [INFO] [main.py:50] 正在自动挂载并启动后台热键监听系统...
+[2026-05-11 19:52:53] [WARNING] [config_mgr.py:58] EmoteConfigs 文件夹为空，请确保打包时附带了表情包配置。
+[2026-05-11 19:52:53] [INFO] [key_listener.py:321] 注册全局发送快捷键: alt+enter
+[2026-05-11 19:52:53] [INFO] [key_listener.py:333] 注册快速搜索快捷键: alt+/
+[2026-05-11 19:52:53] [INFO] [key_listener.py:345] [快速搜索] 已注册 Ctrl+A 触发 (仅白名单应用生效)
+[2026-05-11 19:52:53] [INFO] [key_listener.py:358] [快速搜索] 未设置白名单，Ctrl+A 将在所有应用中触发快速搜索
+[2026-05-11 19:52:53] [INFO] [key_listener.py:361] 后台监听已启动 | 监控键位: ['全局输出:alt+enter', '快速搜索:alt+/', '快速搜索:ctrl+a']
+[2026-05-11 19:52:53] [INFO] [main.py:76] 加载默认初始表情: 待命...
+[2026-05-11 19:52:53] [DEBUG] [main_window.py:1516] HUD trigger: 待命...
+[2026-05-11 19:52:53] [INFO] [main.py:79] 引擎全部初始化完毕，现已处于待命状态
+[2026-05-11 19:52:57] [INFO] [key_listener.py:367] 后台监听已停止

@@ -93,11 +93,7 @@ def get_logger():
 
 
 def set_log_level(level):
-    """
-    运行时动态调整日志级别。
-    参数可以是字符串 ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
-    或 logging 模块常量 (如 logging.INFO)。
-    """
+    """动态调整日志级别，支持字符串名('DEBUG'/'INFO'/...)或 logging 常量"""
     log = get_logger()
     log.setLevel(level)
     for handler in log.handlers:

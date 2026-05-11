@@ -161,8 +161,8 @@ class ImageGenerator:
         align = config.get("text_align", "center")
         valign = config.get("valign", "bottom")
         
-        letter_spacing = config.get("letter_spacing", 0)  
-        line_spacing = config.get("line_spacing", 4)      
+        letter_spacing = config.get("letter_spacing", 0)
+        line_spacing = config.get("line_spacing", 4)
         is_italic = config.get("is_italic", False)
         is_underline = config.get("is_underline", False)
         text_rotation = config.get("text_rotation", 0)
@@ -223,7 +223,7 @@ class ImageGenerator:
         else:
             img.paste(base_resized, (base_x, base_y), mask=base_resized)
 
-        # ====== 加载多个覆盖图层 (Overlays) ======
+        # 加载多个覆盖图层
         overlays_cfg = config.get("overlays", [])
         
         # 兼容老版单图层
@@ -425,7 +425,7 @@ class ImageGenerator:
         # 将所有图层按 Z 层级从小到大排序
         loaded_overlays.sort(key=lambda x: x.get("z", 2))
 
-        # --- 图层绘制阶段 ---
+        # 图层绘制阶段
         # Z <= 0 垫底层 (在底图上方, 文本框下方)
         for ov in loaded_overlays:
             if ov["z"] <= 0:

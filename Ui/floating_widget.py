@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QPoint, QTimer
 from PySide6.QtGui import QPixmap, QFont, QPainter, QColor, QPainterPath, QMouseEvent, QPen
 
 class FloatingHUD(QWidget):
-    """桌面悬浮指示器 — 显示当前装备的表情，支持悬停展开/拖拽移动/鼠标穿透/透明动画"""
+    """桌面悬浮指示器 — 当前装备表情的悬停展开/拖拽/透明动画"""
     def __init__(self, parent=None):
         super().__init__(parent)
         
@@ -54,7 +54,7 @@ class FloatingHUD(QWidget):
         self.hide()
 
     def _sync_window_size(self):
-        """动画期间强制窗口外壳贴合内部布局"""
+        """动画期间同步窗口外壳尺寸"""
         self.adjustSize()
         self.reposition_to_anchor()
 
@@ -86,14 +86,14 @@ class FloatingHUD(QWidget):
                 self.expand_preview()
 
     def reposition_to_anchor(self):
-        """如果用户没有拖拽过，确保尺寸变化时依然吸附在右下角"""
+        """未手动拖拽时保持右下角锚定"""
         self.adjustSize()
         if not self.custom_pos:
             screen = self.screen().geometry()
             self.move(screen.width() - self.width() - 40, screen.height() - self.height() - 80)
 
     def collapse_preview(self):
-        """潜伏状态：使用动画收起图片，只保留文字药丸"""
+        """收起预览 — 仅保留文字标签"""
         self.collapse_timer.stop()
         if self.is_hover_mode:
             self.expand_anim.stop()
@@ -104,14 +104,13 @@ class FloatingHUD(QWidget):
             self.reposition_to_anchor()
 
     def _on_anim_finished(self):
-        """动画结束时的统一处理回调"""
+        """动画结束后处理布局"""
         if self.icon_label.maximumHeight() == 0:
             self.icon_label.hide()
         self._sync_window_size()
 
-
     def expand_preview(self):
-        """激活状态：使用动画平滑展开图片"""
+        """展开预览 — 显示缩略图"""
         self.icon_label.show()
         self.expand_anim.stop()
         self.expand_anim.setStartValue(self.icon_label.height())
@@ -130,7 +129,7 @@ class FloatingHUD(QWidget):
             event.accept()
 
     def enterEvent(self, event):
-        """鼠标移入：透明度高亮并自动展开图片"""
+        """鼠标移入 — 高亮并展开预览"""
         if not self.cfg.get("hud_click_through", False):
             self.hover_opacity_anim.stop()
             self.hover_opacity_anim.setEndValue(1.0)
@@ -142,7 +141,7 @@ class FloatingHUD(QWidget):
         super().enterEvent(event)
 
     def leaveEvent(self, event):
-        """鼠标移出：恢复透明度并自动收起图片"""
+        """鼠标移出 — 恢复透明并收起预览"""
         if not self.cfg.get("hud_click_through", False):
             self.hover_opacity_anim.stop()
             self.hover_opacity_anim.setEndValue(self.base_opacity)
@@ -153,7 +152,7 @@ class FloatingHUD(QWidget):
         super().leaveEvent(event)
 
     def paintEvent(self, event):
-        """绘制深色质感面板"""
+        """深色圆角面板绘制"""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         

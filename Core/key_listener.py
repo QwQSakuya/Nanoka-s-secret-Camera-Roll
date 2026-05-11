@@ -16,10 +16,7 @@ from Core.image_generator import ImageGenerator
 from Core.logger import logger
 
 class ChatBoxController(QObject):
-    """
-    核心工作流控制器 (两步走：装填 -> 发射)
-    负责桥接: 键盘监听 <-> HUD悬浮窗 <-> 剪贴板管理 <-> 图像引擎
-    """
+    """键盘监听 → HUD → 剪贴板 → 图像引擎 工作流控制器"""
     arm_signal = Signal(dict)
     execute_signal = Signal()
     quit_signal = Signal()
@@ -130,15 +127,7 @@ class ChatBoxController(QObject):
             return False
 
     def _clear_clipboard(self):
-        cb = QApplication.clipboard()
-        for _ in range(3):
-            cb.clear()
-            cb.setText("")
-            QApplication.processEvents()
-            if not cb.mimeData().hasImage() and not cb.mimeData().hasText():
-                return
-            time.sleep(0.01)
-        logger.debug("剪贴板清理：多次尝试后仍残留内容")
+        ClipboardManager.robust_clear()
 
     def _write_image_to_clipboard(self, img) -> bool:
         cb = QApplication.clipboard()
@@ -357,7 +346,7 @@ class ChatBoxController(QObject):
             except Exception:
                 logger.exception("[快速搜索] Ctrl+A 注册失败")
 
-        # 测试方法: 打印当前白名单
+        # 打印当前白名单
         raw_procs = self.global_settings.get("target_processes", []) if self.global_settings else []
         if raw_procs:
             if isinstance(raw_procs, str):

@@ -6,11 +6,7 @@ from Core.logger import logger
 
 
 class ClipboardManager:
-    """
-    剪贴板管理器
-    负责拦截、读取和重写剪贴板内容
-    结合 PySide6 的 QClipboard 和 Pillow 进行图片转换
-    """
+    """剪贴板管理器：拦截、读取、重写剪贴板内容 (QClipboard + Pillow)"""
     def __init__(self):
         self.clipboard = QApplication.clipboard()
         self.cached_image: Image.Image | None = None
@@ -44,6 +40,19 @@ class ClipboardManager:
     def clear(self):
         self.clipboard.clear()
         logger.debug("剪贴板已清空")
+
+    @staticmethod
+    def robust_clear():
+        """稳健清空剪贴板（多轮尝试，确保文字和图片都被清除）。"""
+        cb = QApplication.clipboard()
+        for _ in range(3):
+            cb.clear()
+            cb.setText("")
+            QApplication.processEvents()
+            if not cb.mimeData().hasImage() and not cb.mimeData().hasText():
+                return
+            time.sleep(0.01)
+        logger.debug("剪贴板清理：多次尝试后仍残留内容")
 
     def check_and_backup_image(self) -> bool:
         img = self.get_image()

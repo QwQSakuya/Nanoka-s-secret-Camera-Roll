@@ -52,7 +52,8 @@ NIGHT_GLASS_STYLE = """
     QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover { background-color: rgba(255, 255, 255, 0.3); }
 """
 
-# ================= 定制化 UI 组件 =================
+# 定制化 UI 组件
+
 class ColorPickerBtn(QPushButton):
     color_changed = Signal(str)
 
@@ -442,7 +443,7 @@ def create_spin_box(val, vmin, vmax, callback, special_text=None):
     sb.valueChanged.connect(callback)
     return sb
 
-# ================= 核心编辑器主窗口 =================
+# 核心编辑器主窗口
 
 class EditorWindow(QWidget):
     saved_signal = Signal()
@@ -477,7 +478,7 @@ class EditorWindow(QWidget):
         
         self.trigger_render()
 
-    # ================= 完美修复：重新接管无边框窗口拖拽事件 =================
+    # 无边框窗口拖拽事件
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.LeftButton:
             self.dragPos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
@@ -487,7 +488,6 @@ class EditorWindow(QWidget):
         if event.buttons() == Qt.LeftButton:
             self.move(event.globalPosition().toPoint() - self.dragPos)
             event.accept()
-    # =====================================================================
 
     def load_config(self):
         path = os.path.join(self.folder_path, "config.json")
@@ -861,7 +861,7 @@ class EditorWindow(QWidget):
         
         self.layout_controls.addWidget(self.group_ov)
 
-    # ---------------- 业务逻辑与图层管理 ----------------
+    # 业务逻辑与图层管理
 
     def change_base_image(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "选取新底图", "", "Images (*.png *.jpg *.jpeg *.webp)")
