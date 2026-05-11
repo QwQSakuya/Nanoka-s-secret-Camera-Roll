@@ -20,69 +20,21 @@
     },
     "items": [
         {
-            "id": "生气表情_狗.jpg",
+            "id": "演示用.jpg",
             "folder": "",
-            "filename": "生气表情_狗.jpg",
-            "display_name": "生气表情_狗",
-            "tags": [
-                {
-                    "name": "默认收藏",
-                    "color": "#66b2ff"
-                },
-                {
-                    "name": "生气",
-                    "color": "#ff6b6b"
-                },
-                {
-                    "name": "狗",
-                    "color": "#6bcb77"
-                }
-            ],
-            "added_at": 1778318001.0,
-            "sort_order": 1
-        },
-        {
-            "id": "猫猫睡觉.png",
-            "folder": "",
-            "filename": "猫猫睡觉.png",
-            "display_name": "猫猫睡觉",
-            "tags": [
-                {
-                    "name": "可爱",
-                    "color": "#ff6b6b"
-                },
-                {
-                    "name": "猫",
-                    "color": "#ffd93d"
-                },
-                {
-                    "name": "睡觉",
-                    "color": "#4d96ff"
-                },
-                {
-                    "name": "test",
-                    "color": "#66b2ff"
-                }
-            ],
-            "added_at": 1778318004.0,
-            "sort_order": 1
-        },
-        {
-            "id": "nnk_punching.gif",
-            "folder": "cat",
-            "filename": "nnk_punching.gif",
-            "display_name": "nnk_punching",
+            "filename": "演示用.jpg",
+            "display_name": "演示用",
             "tags": [
                 {
                     "name": "test",
-                    "color": "#66b2ff"
+                    "color": "#0cb000"
                 },
                 {
-                    "name": "a",
-                    "color": "#66b2ff"
+                    "name": "奈叶香",
+                    "color": "#797979"
                 }
             ],
-            "added_at": 1778425079.663708,
+            "added_at": 1778507343.2113502,
             "sort_order": 0
         }
     ]

@@ -1,2 +1,2 @@
-- if find hotkeys cant rejister , try pressing ctrl and enter separately . If not fix change language with win+space once .
+- if find hotkeys cant register , try pressing ctrl and enter separately . If not fix change language with win+space once .
 - 如果发现快捷键无法启用，请单独按 ctrl 和 enter ，如果还是没用请切换输入法(win+space)一次

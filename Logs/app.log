@@ -3052,3 +3052,32 @@ NameError: name 'QWidget' is not defined
 [2026-05-11 20:43:24] [DEBUG] [main_window.py:869] [TagCard] showEvent: item=开心每一天.jpg, card_w=230, visible=True
 [2026-05-11 20:43:24] [DEBUG] [main_window.py:869] [TagCard] showEvent: item=猫猫跳舞.gif, card_w=230, visible=True
 [2026-05-11 20:43:26] [INFO] [key_listener.py:367] 后台监听已停止
+[2026-05-11 21:48:41] [INFO] [main.py:33] 正在初始化底层引擎组件...
+[2026-05-11 21:48:41] [DEBUG] [clipboard_mgr.py:13] ClipboardManager 已初始化
+[2026-05-11 21:48:41] [INFO] [main.py:38] 正在加载配置管理器...
+[2026-05-11 21:48:41] [INFO] [config_mgr.py:78] 表情包加载完成: 共 8/8 个目录成功
+[2026-05-11 21:48:41] [INFO] [main.py:43] 正在启动UI 主界面...
+[2026-05-11 21:48:44] [INFO] [saved_emotes_mgr.py:47] reload: 清理 3 个已删除文件: ['生气表情_狗.jpg', '猫猫睡觉.png', 'nnk_punching.gif']
+[2026-05-11 21:48:45] [INFO] [config_mgr.py:78] 表情包加载完成: 共 8/8 个目录成功
+[2026-05-11 21:48:45] [INFO] [main.py:47] 正在挂载并启动后台热键和悬浮窗...
+[2026-05-11 21:48:45] [INFO] [main.py:50] 正在自动挂载并启动后台热键监听系统...
+[2026-05-11 21:48:45] [INFO] [config_mgr.py:78] 表情包加载完成: 共 8/8 个目录成功
+[2026-05-11 21:48:46] [DEBUG] [key_listener.py:310] 注册表情快捷键: alt+p (nnk巡视底盘)
+[2026-05-11 21:48:46] [DEBUG] [key_listener.py:310] 注册表情快捷键: alt+3 (安安#愤怒#)
+[2026-05-11 21:48:46] [DEBUG] [key_listener.py:310] 注册表情快捷键: alt+2 (安安#开心#)
+[2026-05-11 21:48:46] [DEBUG] [key_listener.py:310] 注册表情快捷键: alt+1 (安安#正常#)
+[2026-05-11 21:48:46] [DEBUG] [key_listener.py:310] 注册表情快捷键: alt+5 (安安#害羞#)
+[2026-05-11 21:48:46] [DEBUG] [key_listener.py:310] 注册表情快捷键: alt+4 (安安#无语#)
+[2026-05-11 21:48:46] [DEBUG] [key_listener.py:310] 注册表情快捷键: alt+6 (安安#病娇#)
+[2026-05-11 21:48:46] [DEBUG] [key_listener.py:310] 注册表情快捷键: alt+q (草丛中的奈叶香)
+[2026-05-11 21:48:46] [INFO] [key_listener.py:321] 注册全局发送快捷键: ctrl+enter
+[2026-05-11 21:48:46] [INFO] [key_listener.py:333] 注册快速搜索快捷键: alt+/
+[2026-05-11 21:48:46] [INFO] [key_listener.py:345] [快速搜索] 已注册 Ctrl+A 触发 (仅白名单应用生效)
+[2026-05-11 21:48:46] [INFO] [key_listener.py:356] [快速搜索] 当前白名单应用: ['discord.exe', 'wechat.exe', 'qq.exe', 'firefox.exe']
+[2026-05-11 21:48:46] [INFO] [key_listener.py:361] 后台监听已启动 | 监控键位: ['alt+p', 'alt+3', 'alt+2', 'alt+1', 'alt+5', 'alt+4', 'alt+6', 'alt+q', '全局输出:ctrl+enter', '快速搜索:alt+/', '快速搜索:ctrl+a']
+[2026-05-11 21:48:46] [INFO] [main.py:76] 加载默认初始表情: 安安#正常#
+[2026-05-11 21:48:46] [DEBUG] [main_window.py:1516] HUD trigger: 安安#正常#
+[2026-05-11 21:48:46] [INFO] [main.py:79] 引擎全部初始化完毕，现已处于待命状态
+[2026-05-11 21:48:57] [DEBUG] [main_window.py:869] [TagCard] showEvent: item=演示用.jpg, card_w=230, visible=True
+[2026-05-11 21:49:03] [INFO] [saved_emotes_mgr.py:368] Auto-imported orphan item for tag save: 演示用.jpg (folder=)
+[2026-05-11 21:49:32] [INFO] [key_listener.py:367] 后台监听已停止

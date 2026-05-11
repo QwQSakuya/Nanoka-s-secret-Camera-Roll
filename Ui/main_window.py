@@ -1395,9 +1395,9 @@ class MainWindow(QMainWindow):
         sidebar_layout = nav_inner_layout
 
         add_section("核心功能")
-        add_nav_btn("diamond.svg", "主页探索", 0)
-        add_nav_btn("image.svg", "表情管理", 1)
-        add_nav_btn("database.svg", "表情包收集", 4)
+        add_nav_btn("diamond.svg", "主页", 0)
+        add_nav_btn("image.svg", "生成表情管理", 1)
+        add_nav_btn("database.svg", "奈叶香的相册", 4)
         
         add_section("系统与状态")
         add_nav_btn("square-terminal.svg", "运行日志", 2)

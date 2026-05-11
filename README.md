@@ -3,17 +3,20 @@
 [English](README.md) | [简体中文](README_zh.md)
 
 
-### THIS PROJECT IS MADE MOSTLY OUT OF AI , I START THIS PROJECT JUST FOR MY OWN AND DID NOT INTEND TO PUBLISH IT . YOU ARE BEING WARNED FOR THE LOW QUALITY OF THIS PROJECT!
+A tool that generates images base on your chatbox and adds a shortcut for sending emotes
 
-
-A tool that generates generates images base on your chatbox
-
-the project is inspired by and based on :
-[Anan-s-Sketchbook-Check-Box](https://github.com/MarkCup-Official/Anan-s-Sketchbook-Chat-Box)
-## Special functions
+<small>the generating part is inspired by :  
+- [Anan-s-Sketchbook-Check-Box](https://github.com/MarkCup-Official/Anan-s-Sketchbook-Chat-Box)</small>
+## Special functions (emote generating)
+- Generates images with a shortcut
 - Built in editor for the images
 - A floating gui to show the current emote
-- special color changing symbol
+- Special color changing symbol
+## Special functions (custom import emotes)
+- Navagational popup gui for sending stored emotes
+- Fast search using tags
+- supports (png,gif,mp3,mp4)
+
 ## Emmmm....
 - Functions based on bugs
 - Theres still lot's of unknown errors
