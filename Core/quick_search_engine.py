@@ -55,6 +55,13 @@ class QuickSearchEngine:
                 item["_score"] = 5
             return {"items": items, "folder": "", "title": "全部收藏"}
 
+        if text.startswith('/*') and len(text) > 2:
+            suffix = text[2:].lstrip('/')
+            items = self.scan_all()
+            items = self._apply_syntax(items, suffix)
+            logger.debug(f"[QuickSearchEngine] /*{suffix} 全量搜索: {len(items)} 项")
+            return {"items": items, "folder": "", "title": suffix or "全部收藏"}
+
         if not text.startswith('/'):
             return None
 
@@ -98,9 +105,14 @@ class QuickSearchEngine:
                             item["_score"] = 5
                         return {"items": items, "folder": folder_key, "title": seg}
 
-                items = self._mgr.scan_physical_folder("")
-                results = self.filter_items_by_text(items, remaining)
-                return {"items": results, "folder": "", "title": remaining}
+                if 'tag=' in remaining:
+                    items = self._mgr.scan_physical_folder("")
+                    results = self._apply_syntax(items, remaining)
+                    return {"items": results, "folder": "", "title": remaining}
+                else:
+                    items = self._mgr.scan_physical_folder("")
+                    results = self.filter_items_by_text(items, remaining)
+                    return {"items": results, "folder": "", "title": remaining}
 
             res = self._search_with_syntax(remaining, current_rel, physical=True)
             return {"items": res or [], "folder": current_rel, "title": remaining}
@@ -185,19 +197,14 @@ class QuickSearchEngine:
 
     # 内部方法
 
-    def _search_with_syntax(self, suffix, folder_key, physical=False):
-        """对后缀进行 tag= / 文本 解析，在指定 folder 内搜索."""
+    def _apply_syntax(self, items, suffix):
+        """对现有 items 列表进行 tag= / 文本 筛选."""
         tag_match = re.search(r'tag\s*=\s*([^/]+)', suffix)
         text_part = re.sub(r'tag\s*=\s*[^/]+', '', suffix).strip().strip('/')
 
-        if physical:
-            items = self._mgr.scan_physical_folder(folder_key)
-        else:
-            items = self._mgr.get_items_in_folder(folder_key)
-
         if tag_match:
             tag_value = tag_match.group(1).strip()
-            logger.debug(f"[QuickSearchEngine] tag 筛选: {tag_value} (physical={physical})")
+            logger.debug(f"[QuickSearchEngine] tag 筛选: {tag_value} (all items)")
             items = [it for it in items if any(tag_value.lower() in extract_tag_name(t) for t in it.get("tags", []))]
 
         if text_part:
@@ -207,6 +214,14 @@ class QuickSearchEngine:
         for it in items:
             it["_score"] = 5
         return items
+
+    def _search_with_syntax(self, suffix, folder_key, physical=False):
+        """对后缀进行 tag= / 文本 解析，在指定 folder 内搜索."""
+        if physical:
+            items = self._mgr.scan_physical_folder(folder_key)
+        else:
+            items = self._mgr.get_items_in_folder(folder_key)
+        return self._apply_syntax(items, suffix)
 
     def _find_folder_key_by_name(self, name):
         folders = self._mgr.get_folders()

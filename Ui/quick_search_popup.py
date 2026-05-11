@@ -11,6 +11,7 @@ from PySide6.QtSvg import QSvgRenderer
 
 from Core.emote_sender import (copy_file_to_clipboard, get_video_first_frame_pixmap,
                                 get_external_resource_path)
+from Core.quick_search_engine import extract_tag_name
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +136,27 @@ class SavedEmoteQuickPopup(QDialog):
     def set_title(self, text):
         self._title_label.setText(text)
 
+    def _stop_all_gifs(self):
+        """递归停止布局中所有正在播放的 QMovie 并释放资源"""
+        def _stop_recursive(widget):
+            from PySide6.QtWidgets import QLabel
+            from PySide6.QtGui import QMovie
+            if isinstance(widget, QLabel):
+                movie = widget.movie()
+                if movie is not None:
+                    movie.stop()
+                    movie.setDevice(None)
+                    widget.setMovie(None)
+                    movie.deleteLater()
+            for child in widget.findChildren(QWidget):
+                _stop_recursive(child)
+        for i in range(self._content_layout.count()):
+            item = self._content_layout.itemAt(i)
+            if item and item.widget():
+                _stop_recursive(item.widget())
+
     def clear_items(self):
+        self._stop_all_gifs()
         while self._content_layout.count():
             item = self._content_layout.takeAt(0)
             if item.widget():
@@ -261,13 +282,17 @@ class SavedEmoteQuickPopup(QDialog):
                 reader = QImageReader(file_path)
                 orig = reader.size()
                 movie = QMovie(file_path)
+                movie.setCacheMode(QMovie.CacheAll)
                 if orig.isValid() and orig.width() > 0:
                     ratio = THUMB_W / orig.width()
                     movie.setScaledSize(QSize(THUMB_W, int(orig.height() * ratio)))
                 else:
                     movie.setScaledSize(QSize(THUMB_W, THUMB_H))
                 thumb.setMovie(movie)
-                movie.start()
+                movie.jumpToFrame(0)  # 只显示首帧，不启动解码线程
+                # 将 movie 引用存到 row 上，供事件处理使用
+                row._movie = movie
+                row._thumb_label = thumb
             elif ext in ('.mp4', '.webm', '.avi', '.mov'):
                 frame = get_video_first_frame_pixmap(file_path, THUMB_W, THUMB_H)
                 if frame is not None:
@@ -294,7 +319,7 @@ class SavedEmoteQuickPopup(QDialog):
 
         tags = item_data.get("tags", [])
         if tags:
-            tag_text = "  ".join(f"#{self._truncate_text(t, 8)}" for t in tags[:4])
+            tag_text = "  ".join(f"#{self._truncate_text(extract_tag_name(t), 8)}" for t in tags[:4])
             if len(tags) > 4:
                 tag_text += f"  +{len(tags) - 4}"
         else:
@@ -320,6 +345,22 @@ class SavedEmoteQuickPopup(QDialog):
 
         row.paintEvent = lambda e, r=row: self._paint_item_bg(e, r)
         row.mousePressEvent = lambda e, fp=file_path: self._on_item_clicked(fp)
+
+        # 悬浮播放 GIF：鼠标进入时启动，离开时停止并回到首帧
+        def _on_enter(e, r=row):
+            movie = getattr(r, '_movie', None)
+            if movie is not None:
+                movie.start()
+
+        def _on_leave(e, r=row):
+            movie = getattr(r, '_movie', None)
+            if movie is not None:
+                movie.stop()
+                movie.jumpToFrame(0)
+
+        row.enterEvent = _on_enter
+        row.leaveEvent = _on_leave
+
         self._content_layout.addWidget(row)
 
     def _paint_item_bg(self, event, row):
@@ -376,6 +417,7 @@ class SavedEmoteQuickPopup(QDialog):
             self._fade_anim.finished.disconnect()
         except RuntimeError:
             pass
+        self.clear_items()
         try:
             QApplication.instance().removeEventFilter(self)
         except Exception:

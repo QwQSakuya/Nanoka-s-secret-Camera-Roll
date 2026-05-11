@@ -733,13 +733,14 @@ class SavedEmoteCard(QFrame):
                 reader = QImageReader(file_path)
                 orig = reader.size()
                 self._gif_movie = QMovie(file_path)
+                self._gif_movie.setCacheMode(QMovie.CacheAll)
                 if orig.isValid() and orig.width() > 0:
                     ratio = 206 / orig.width()
                     self._gif_movie.setScaledSize(QSize(206, int(orig.height() * ratio)))
                 else:
                     self._gif_movie.setScaledSize(QSize(206, 130))
                 self._thumb.setMovie(self._gif_movie)
-                self._gif_movie.start()
+                self._gif_movie.jumpToFrame(0)  # 只显示首帧，不启动解码线程
             elif ext in ('.mp4', '.webm', '.avi', '.mov'):
                 from Core.emote_sender import get_video_first_frame_pixmap
                 pixmap = get_video_first_frame_pixmap(file_path, 206, 130)
@@ -945,6 +946,15 @@ class SavedEmoteCard(QFrame):
                     break
                 w = w.parent()
 
+    def _cleanup_gif(self):
+        """完全释放 GIF 资源"""
+        if self._gif_movie:
+            self._gif_movie.stop()
+            self._gif_movie.setDevice(None)
+            self._thumb.setMovie(None)
+            self._gif_movie.deleteLater()
+            self._gif_movie = None
+
     def stop_gif(self):
         if self._gif_movie:
             self._gif_movie.stop()
@@ -952,6 +962,18 @@ class SavedEmoteCard(QFrame):
     def start_gif(self):
         if self._gif_movie:
             self._gif_movie.start()
+
+    def enterEvent(self, e):
+        """鼠标进入卡片时播放 GIF"""
+        self.start_gif()
+        super().enterEvent(e)
+
+    def leaveEvent(self, e):
+        """鼠标离开卡片时停止 GIF 并回到首帧"""
+        if self._gif_movie:
+            self._gif_movie.stop()
+            self._gif_movie.jumpToFrame(0)
+        super().leaveEvent(e)
 
     def paintEvent(self, e):
         p = QPainter(self)
@@ -1150,6 +1172,7 @@ class GlassTagDialog(GlassDialogBase):
         name_label.setStyleSheet("color: #a0a0a0; font-size: 11px; background: transparent;")
         self.name_edit = QLineEdit(tag_name)
         self.name_edit.setPlaceholderText("输入标签名...")
+        self.name_edit.returnPressed.connect(self._apply)
         fl.addWidget(name_label)
         fl.addWidget(self.name_edit)
 
@@ -1801,6 +1824,9 @@ class MainWindow(QMainWindow):
                     items = self.saved_emotes_mgr.get_items_in_folder(None)
                 items = self._filter_items_by_text(items, search)
 
+        # 先停止所有现有卡片的 GIF，防止后台线程残留导致卡顿
+        for c in self._coll_cards:
+            c.stop_gif()
         self._coll_grid.clear_all()
         self._coll_cards.clear()
 
@@ -1821,7 +1847,6 @@ class MainWindow(QMainWindow):
             self._coll_grid.addWidget(card)
             self._coll_cards.append(card)
 
-        self._coll_throttle_gifs()
         self._coll_grid._relayout()
 
     def _coll_refresh_sidebar(self, rel):
@@ -1863,17 +1888,6 @@ class MainWindow(QMainWindow):
             self._coll_current = rel
         self._coll_search.clear()
         self._coll_refresh()
-
-    def _coll_throttle_gifs(self):
-        GIF_LIMIT = 5
-        visible = 0
-        for card in self._coll_cards:
-            if card.isVisible():
-                if visible < GIF_LIMIT:
-                    card.start_gif()
-                    visible += 1
-                else:
-                    card.stop_gif()
 
     def _coll_new_folder(self):
         dlg = GlassNameDialog(self, "", "新建文件夹")
