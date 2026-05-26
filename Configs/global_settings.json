@@ -33,7 +33,7 @@
         }
     ],
     "hud_mode": "hover",
-    "hud_opacity": 88,
+    "hud_opacity": 86,
     "hud_click_through": false,
     "target_processes": [
         "discord.exe",
@@ -41,5 +41,8 @@
         "qq.exe",
         "firefox.exe"
     ],
-    "quick_search_delay_ms": 141
+    "quick_search_delay_ms": 378,
+    "process_delays": {
+        "discord.exe": 800
+    }
 }

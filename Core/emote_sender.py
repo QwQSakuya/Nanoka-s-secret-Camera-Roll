@@ -1,13 +1,12 @@
 import os
 import sys
 import time
-import threading
 import ctypes
 from ctypes import wintypes
 import keyboard
 from PySide6.QtGui import QImage,QPixmap
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QMimeData, QUrl, Qt, QByteArray
+from PySide6.QtCore import QMimeData, QUrl, Qt, QByteArray, QTimer
 from PySide6.QtSvg import QSvgRenderer
 from Core.logger import logger
 
@@ -97,8 +96,8 @@ def _set_windows_clipboard_hdrop(file_path: str):
 def copy_file_to_clipboard(file_path: str) -> bool:
     """
     将表情文件以最优方式复制到剪贴板。
-    · 静态图片 (png/jpg/webp) → 以 QImage 格式写入
-    · GIF → QMimeData URL + Windows CF_HDROP 双保险
+    · 图片 (png/jpg/webp/gif) → QMimeData URL + PNG 原始字节 + Windows CF_HDROP
+        （避免 QImage→DIB 转换丢失 Alpha 通道）
     · 视频/音频 → 以文件引用 (text/uri-list) 写入，由聊天软件自行处理
     """
     if not file_path or not os.path.isfile(file_path):
@@ -108,26 +107,24 @@ def copy_file_to_clipboard(file_path: str) -> bool:
     ext = os.path.splitext(file_path)[1].lower()
     filename = os.path.basename(file_path)
 
-    # 静态图片 → QImage
-    if ext in IMAGE_EXTS:
-        img = QImage(file_path)
-        if img.isNull():
-            logger.error(f"[EmoteSender] 图片加载失败: {file_path}")
-            return False
-        QApplication.clipboard().setImage(img)
-        logger.info(f"[EmoteSender] 已复制图片到剪贴板 ({filename})")
-        return True
-
-    # GIF → QMimeData URL + CF_HDROP 双保险
-    if ext == '.gif':
+    # 所有图片文件 → QMimeData URL + CF_HDROP（避免 DIB 丢失 Alpha 通道）
+    if ext in IMAGE_EXTS or ext == '.gif':
         mime = QMimeData()
         mime.setUrls([QUrl.fromLocalFile(file_path)])
+
+        # 对于 PNG 文件，同时写入原始 PNG 字节数据以保留 Alpha 通道
+        if ext == '.png':
+            with open(file_path, 'rb') as f:
+                png_data = f.read()
+            mime.setData('image/png', QByteArray(png_data))
+            logger.debug(f"[EmoteSender] 已附加 PNG 原始数据 ({filename})")
+
         QApplication.clipboard().setMimeData(mime)
         logger.debug(f"[EmoteSender] QMimeData URL 已写入 ({filename})")
 
         # 追加 Windows 原生 CF_HDROP
         _set_windows_clipboard_hdrop(file_path)
-        logger.info(f"[EmoteSender] 已复制 GIF 到剪贴板 ({filename})")
+        logger.info(f"[EmoteSender] 已复制图片到剪贴板 ({filename})")
         return True
 
     # 视频/音频 → 文件引用
@@ -146,11 +143,10 @@ def paste_to_chat(delay_ms: int = 50):
     logger.debug("[EmoteSender] Ctrl+V 已发送")
 
     # 粘贴后延迟清理剪贴板，避免残留数据
-    # 使用 threading.Timer 而非 QTimer，确保弹窗关闭后仍能触发清理
+    # 使用 QTimer.singleShot 在主线程事件循环中触发，安全执行 Qt GUI 操作
     if _ENABLE_CLEANUP:
-        cleanup_delay = 500
-        threading.Timer(cleanup_delay / 1000.0, _cleanup_clipboard).start()
-        logger.debug(f"[EmoteSender] 将在 {cleanup_delay}ms 后清理剪贴板")
+        QTimer.singleShot(500, _cleanup_clipboard)
+        logger.debug(f"[EmoteSender] 将在 500ms 后清理剪贴板")
 
 
 def _cleanup_clipboard():

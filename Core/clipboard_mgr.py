@@ -47,7 +47,6 @@ class ClipboardManager:
         cb = QApplication.clipboard()
         for _ in range(3):
             cb.clear()
-            cb.setText("")
             QApplication.processEvents()
             if not cb.mimeData().hasImage() and not cb.mimeData().hasText():
                 return

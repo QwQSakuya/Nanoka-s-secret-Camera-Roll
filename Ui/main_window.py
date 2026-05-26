@@ -7,7 +7,9 @@ import logging
 import html
 import re
 import keyboard
-from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QLabel, 
+import ctypes
+import psutil
+from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QLabel,
                                QPushButton, QLineEdit, QGridLayout, QFrame, 
                                QScrollArea, QCheckBox, QSlider, QStackedWidget, 
                                QButtonGroup, QPlainTextEdit, QMainWindow, QMessageBox,
@@ -1539,11 +1541,32 @@ class MainWindow(QMainWindow):
         logger.debug(f"HUD trigger: {emote_name}")
         self.hud.show_emote(emote_name, img_path)
 
+    def _get_active_process_name(self):
+        """获取当前前台窗口的进程名（如 discord.exe），失败返回 None。"""
+        try:
+            hwnd = ctypes.windll.user32.GetForegroundWindow()
+            if not hwnd:
+                return None
+            pid = ctypes.c_ulong(0)
+            ctypes.windll.user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+            process = psutil.Process(pid.value)
+            return process.name().lower()
+        except Exception:
+            return None
+
     def _on_quick_search_hotkey(self):
         logger.debug("[快速搜索] >>> 热键触发入口 <<<")
         self.saved_emotes_mgr.reload()
         cfg = self.config_mgr.global_settings if self.config_mgr else {}
-        delay = cfg.get('quick_search_delay_ms', 150) / 1000.0
+        global_delay = cfg.get('quick_search_delay_ms', 150)
+        # 检查当前前台进程是否有特定延迟配置
+        active_proc = self._get_active_process_name()
+        process_delays = cfg.get('process_delays', {})
+        if active_proc and active_proc in process_delays:
+            delay = process_delays[active_proc] / 1000.0
+            logger.debug(f"[快速搜索] 进程 {active_proc} 特定延迟 {int(delay*1000)}ms")
+        else:
+            delay = global_delay / 1000.0
         try:
         # 模拟 Ctrl+C 同时保持用户 Ctrl 状态
             ctrl_was_held = keyboard.is_pressed('ctrl')
@@ -2184,6 +2207,20 @@ class MainWindow(QMainWindow):
                     else:
                         proc_list = []
 
+                process_delays = {}
+                if hasattr(self, 'proc_delay_input') and self.proc_delay_input:
+                    for line in self.proc_delay_input.toPlainText().strip().splitlines():
+                        line = line.strip()
+                        if ':' in line:
+                            parts = line.split(':', 1)
+                            proc_name = parts[0].strip().lower()
+                            try:
+                                delay_val = int(parts[1].strip())
+                                if proc_name:
+                                    process_delays[proc_name] = delay_val
+                            except ValueError:
+                                pass
+
                 new_cfg.update({
                     "global_trigger_key": self.hk_input.text().strip(),
                     "block_keys": self.block_switch.isChecked(),
@@ -2194,6 +2231,7 @@ class MainWindow(QMainWindow):
                     "hud_opacity": self.opa_slider.value(),
                     "hud_click_through": self.click_switch.isChecked(),
                     "target_processes": proc_list,
+                    "process_delays": process_delays,
                 })
                 self.config_mgr.save_global_settings(new_cfg)
                 self.hud.apply_config(new_cfg)
@@ -2303,6 +2341,35 @@ class MainWindow(QMainWindow):
         
         group4.layout.addWidget(r9)
         layout.addWidget(group4)
+        
+        # ── 进程特定延迟 ──
+        lbl_proc_delay = QLabel("进程特定全选复制延迟")
+        lbl_proc_delay.setStyleSheet("color: #888888; font-size: 12px; font-weight: bold; margin-left: 5px; background: transparent;")
+        layout.addWidget(lbl_proc_delay)
+        
+        group_proc_delay = SettingsGroup()
+        
+        proc_delay_desc = QLabel("为特定 exe 设置专属的全选/复制侦测延迟。\n格式：每行一条，exe名:延迟毫秒数，如 discord.exe:200")
+        proc_delay_desc.setStyleSheet("color: #a0a0a0; font-size: 12px; line-height: 1.5; padding: 10px 20px; background: transparent;")
+        group_proc_delay.layout.addWidget(proc_delay_desc)
+        
+        self.proc_delay_input = QPlainTextEdit()
+        self.proc_delay_input.setFixedHeight(120)
+        self.proc_delay_input.setStyleSheet("QPlainTextEdit { background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; color: #ffffff; font-family: Consolas, monospace; font-size: 13px; }")
+        
+        # 填充现有配置
+        existing_delays = global_cfg.get("process_delays", {})
+        if existing_delays:
+            delay_lines = [f"{exe}:{ms}" for exe, ms in existing_delays.items()]
+            self.proc_delay_input.setPlainText("\n".join(delay_lines))
+        else:
+            self.proc_delay_input.setPlaceholderText("discord.exe:200\nwechat.exe:100\nqq.exe:300")
+        
+        self.proc_delay_input.textChanged.connect(auto_save_settings)
+        
+        proc_delay_row = SettingsRow("进程延迟覆盖", "当全选/复制侦测在特定软件中生效时，使用此处配置的延迟替代全局默认值", self.proc_delay_input)
+        group_proc_delay.layout.addWidget(proc_delay_row)
+        layout.addWidget(group_proc_delay)
         
         layout.addStretch()
 

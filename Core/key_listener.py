@@ -145,6 +145,7 @@ class ChatBoxController(QObject):
     def _extract_text_from_input(self):
         """模拟 Ctrl+A, Ctrl+X 从当前输入框提取文字"""
         self._clear_clipboard()
+        time.sleep(0.05)
         keyboard.send('ctrl+a')
         time.sleep(0.04)
         keyboard.send('ctrl+x')
